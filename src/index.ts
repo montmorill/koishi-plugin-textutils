@@ -1,4 +1,5 @@
-import type { Session } from 'koishi'
+import type { Context, Session } from 'koishi'
+import {} from '@koishijs/plugin-help'
 import { h, Schema } from 'koishi'
 
 export const name = 'montmorill'
@@ -7,7 +8,12 @@ export interface Config { }
 
 export const Config: Schema<Config> = Schema.object({})
 
-export function apply() {}
+export function apply(ctx: Context) {
+  ctx.command('echomd <message:text>', { hidden: true })
+    .action((_, message) => h('markdown', message))
+  ctx.command('echotex <message:text>', { hidden: true })
+    .action((_, message) => h('markdown', `$$${message}$$`))
+}
 
 export async function stream(session: Session, gen: AsyncGenerator<string>) {
   // eslint-disable-next-line style/max-statements-per-line
