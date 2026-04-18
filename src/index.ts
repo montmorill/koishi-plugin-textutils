@@ -1,3 +1,4 @@
+/* eslint-disable style/max-statements-per-line */
 import type { Context, Session } from 'koishi'
 import {} from '@koishijs/plugin-help'
 import { h, Schema } from 'koishi'
@@ -16,11 +17,13 @@ export function apply(ctx: Context) {
 }
 
 export async function stream(session: Session, gen: AsyncGenerator<string>) {
-  // eslint-disable-next-line style/max-statements-per-line
   let id; let index = 0; let res = await gen.next()
-  for (; !res.done; res = await gen.next(), index++)
-    [id] = await session.send(h('qq:markdown', { stream: { state: 1, id, index } }, res.value))
-  await session.send(h('qq:markdown', { stream: { state: 10, id, index } }, res.value))
+  for (; !res.done; res = await gen.next(), index++) {
+    try { [id] = await session.send(h('qq:markdown', { stream: { state: 1, id, index } }, res.value)) }
+    catch { [id] = await session.send(h('qq:markdown', { stream: { state: 1, index } }, res.value)) }
+  }
+  try { await session.send(h('qq:markdown', { stream: { state: 10, id, index } }, res.value)) }
+  catch { await session.send(res.value) }
 }
 
 export function shortcut(canEnter: boolean, text: string, show?: string) {
