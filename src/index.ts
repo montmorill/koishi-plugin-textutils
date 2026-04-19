@@ -14,15 +14,6 @@ export function apply(ctx: Context) {
     .action((_, message) => h('markdown', message))
   ctx.command('echotex <message:text>', { hidden: true, authority: 4 })
     .action((_, message) => h('markdown', `$$${message}$$`))
-  ctx.command('repeat <message:text>', '重复指定次数。')
-    .option('count', '-n <count:number> 重复次数。')
-    .action(({ options }, message) => message.repeat(Number(options?.count || 1)))
-  ctx.command('head <message:text>', '从前往后取指定数量的字符。')
-    .option('count', '-n <count:number> 字符数量。')
-    .action(({ options }, message) => message.slice(0, Number(options?.count || 1)))
-  ctx.command('tail <message:text>', '从后往前取指定数量的字符。')
-    .option('count', '-n <count:number> 字符数量。')
-    .action(({ options }, message) => message.slice(-Number(options?.count || 1)))
 }
 
 export async function stream(session: Session, gen: AsyncGenerator<string>) {
