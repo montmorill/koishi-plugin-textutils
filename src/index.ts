@@ -1,144 +1,49 @@
-/* eslint-disable style/max-statements-per-line */
-import type { Context, Session } from 'koishi'
+import type { Context } from 'koishi'
 import {} from '@koishijs/plugin-help'
 import { h, Schema } from 'koishi'
 
+export * from './utils'
+
 export const name = 'montmorill'
 
-export interface Config {}
+export interface Config {
+  markdown: boolean
+  delimiter: string
+}
 
-export const Config: Schema<Config> = Schema.object({})
+export const Config: Schema<Config> = Schema.object({
+  markdown: Schema.boolean().default(true),
+  delimiter: Schema.string().default(' '),
+})
 
-export function apply(ctx: Context) {
+export function apply(ctx: Context, config: Config) {
+  function markdown(message: string) {
+    return config.markdown ? h('markdown', message) : message
+  }
+
   ctx.command('echomd <message:text>', { hidden: true, authority: 4 })
-    .action((_, message) => h('markdown', message))
+    .action((_, message) => markdown(message))
   ctx.command('echotex <message:text>', { hidden: true, authority: 4 })
-    .action((_, message) => h('markdown', `$$${message}$$`))
+    .action((_, message) => markdown(`$$${message}$$`))
+
+  ctx.command('cut <range:string> <message:text>')
+    .option('delimiter', '-d <delim:string> 分隔符。')
+    .action(({ options }, range, message) => {
+      const delim = options?.delimiter || config.delimiter
+      const [start, end] = range.split(':').map(Number)
+      return message.split(delim)
+        .map(text => text.slice((start || 1) - 1, end || text.length))
+        .join(delim)
+    })
+
+  ctx.command('grep <needle:string> <haystack:text>')
+    .option('delimiter', '-d <delim:string> 分隔符。')
+    .action(({ options }, needle, haystack) => {
+      const sep = options?.delimiter || config.delimiter
+      const regex = new RegExp(needle, 'g')
+      return markdown(haystack.split(sep)
+        .filter(item => item.match(regex)).join(sep)
+        .replaceAll(regex, match => `**${match}**`)
+        .replaceAll('****', ''))
+    })
 }
-
-export async function stream(session: Session, gen: AsyncGenerator<string>) {
-  let id; let index = 0; let res = await gen.next()
-  for (; !res.done; res = await gen.next(), index++) {
-    try { [id] = await session.send(h('qq:markdown', { stream: { state: 1, id, index } }, res.value)) }
-    catch { [id] = await session.send(h('qq:markdown', { stream: { state: 1, index } }, res.value)) }
-  }
-  try { await session.send(h('qq:markdown', { stream: { state: 10, id, index } }, res.value)) }
-  catch { await session.send(res.value) }
-}
-
-export function shortcut(canEnter: boolean | undefined, text: string, show?: string) {
-  // eslint-disable-next-line style/multiline-ternary
-  return show && show !== text ? shortcut.input(text, show)
-    : canEnter ? shortcut.enter(text) : shortcut.input(text)
-}
-
-shortcut.enter = (text: string) => `<qqbot-cmd-enter text=${
-  JSON.stringify(encodeURIComponent(text))
-} />`
-
-/* eslint-disable antfu/if-newline */
-shortcut.input = (text: string, show?: string, reference?: boolean) => {
-  let sb = `<qqbot-cmd-input text=${JSON.stringify(encodeURIComponent(text))}`
-  if (show) sb += ` show=${JSON.stringify(decodeURIComponent(show))}`
-  if (reference) sb += ` reference="${reference}"`
-  sb += ` />`
-  return sb
-}
-
-export function button(data: {
-  label: string
-  visited_label?: string
-  style?: 'default' | 'primary'
-  permission?: Parameters<typeof button.permission>[0]
-  click_limit?: number
-} & Parameters<typeof button.action>[0]) {
-  return {
-    render_data: {
-      label: data.label,
-      style: ['default', 'primary'].indexOf(data.style || 'default'),
-      ...data.visited_label ? { visited_label: data.visited_label } : {},
-    },
-    action: {
-      ...button.action(data),
-      permission: button.permission(data.permission || 'all'),
-      ...data.click_limit ? { click_limit: data.click_limit } : {},
-    },
-  }
-}
-
-export enum ActionType {
-  Url = 0,
-  Call = 1,
-  Reply = 2,
-}
-
-button.action = function (data: (Xor<
-  | { url: string }
-  | { call: string }
-  | { input: string, enter?: boolean, at_bot_show_channel_list?: boolean }
-  | { enter: string, at_bot_show_channel_list?: boolean }
->)) {
-  if (data.url) {
-    return { type: ActionType.Url, data: data.url }
-  }
-  if (data.call) {
-    return { type: ActionType.Call, data: data.call }
-  }
-  if (data.input) {
-    return {
-      type: ActionType.Reply,
-      data: data.input,
-      enter: data.enter ?? false,
-      at_bot_show_channel_list: data.at_bot_show_channel_list ?? false,
-    }
-  }
-  if (data.enter) {
-    return {
-      type: ActionType.Reply,
-      data: data.enter,
-      enter: true,
-      at_bot_show_channel_list: data.at_bot_show_channel_list ?? false,
-    }
-  }
-  throw new Error(`Invalid action type: ${data}`)
-}
-
-export enum PermissionType {
-  Users = 0,
-  Admin = 1,
-  All = 2,
-  Roles = 3,
-}
-
-button.permission = function (data: Xor<
-  | { users: string[] }
-  | 'admin'
-  | 'all'
-  | { roles: string[] }
->) {
-  if (data === 'admin')
-    return { type: PermissionType.Admin }
-  if (data === 'all')
-    return { type: PermissionType.All }
-  if (data.users)
-    return { type: PermissionType.Users, specify_user_ids: data.users }
-  if (data.roles)
-    return { type: PermissionType.Roles, specify_role_ids: data.roles }
-}
-
-button.row = function (...buttons: ReturnType<typeof button>[]) {
-  return { buttons }
-}
-
-button.keyboard = function (...rows: ReturnType<typeof button.row>[]) {
-  return { content: { rows } }
-}
-
-export function withKeyboard(content: string, ...rows: ReturnType<typeof button.row>[]) {
-  return { content, ...rows.length ? { keyboard: button.keyboard(...rows) } : {},
-  }
-}
-
-export type Xor<T, U = T> = T extends any ? T & {
-  [K in Exclude<U extends any ? keyof U : never, keyof T>]?: never
-} : never
