@@ -19,8 +19,7 @@ export function shortcut(canEnter: boolean | undefined, text: string, show?: str
     : canEnter ? shortcut.enter(text) : shortcut.input(text)
 }
 
-shortcut.enter = (text: string) => `<qqbot-cmd-enter text=${JSON.stringify(encodeURIComponent(text))
-  } />`
+shortcut.enter = (text: string) => `<qqbot-cmd-enter text=${JSON.stringify(encodeURIComponent(text))} />`
 
 /* eslint-disable antfu/if-newline */
 shortcut.input = (text: string, show?: string, reference?: boolean) => {
