@@ -1,6 +1,6 @@
 import type { Context } from 'koishi'
 import { } from '@koishijs/plugin-help'
-import { h, Schema } from 'koishi'
+import { h, Random, Schema } from 'koishi'
 
 export * from './utils'
 
@@ -77,5 +77,15 @@ export function apply(ctx: Context, config: Config) {
       return options?.plain ? haystack : markdown(haystack
         .replaceAll(regex, match => `**${match}**`)
         .replaceAll('****', ''))
+    })
+
+  ctx.command('shuf <message:text>', '随机打乱字段顺序。')
+    .option('delimiter', '-d <delim:string> 分隔符。')
+    .option('count', '-n <count:number> 显示前n个字段。')
+    .action(({ options }, message) => {
+      const delimiter = options?.delimiter || config.delimiter
+      return Random
+        .pick(message.split(delimiter), options?.count || 1)
+        .join(delimiter)
     })
 }
