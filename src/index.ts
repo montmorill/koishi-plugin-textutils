@@ -15,12 +15,12 @@ export const Config: Schema<Config> = Schema.object({
 })
 
 export function apply(ctx: Context, config: Config) {
-  ctx.command('echomd <message:text>', '发送Markdown格式的消息。')
+  ctx.command('echomd <message:text>', '发送Markdown格式的消息。', { hidden: true })
     .action((_, message) => {
       return h('markdown', message)
     })
 
-  ctx.command('echotex <message:text>', '发送 Tex 格式的消息。')
+  ctx.command('echotex <message:text>', '发送 Tex 格式的消息。', { hidden: true })
     .action((_, message) => {
       return h('markdown', `$$${message}$$`)
     })
@@ -35,7 +35,7 @@ export function apply(ctx: Context, config: Config) {
       return String(message.split(delim).length)
     })
 
-  ctx.command('cut <range:string> <message:text>', '按指定范围裁剪每个字段，支持负索引和反转区间。')
+  ctx.command('cut <range:string> <message:text>', '按指定范围裁剪每个字段。')
     .option('delimiter', '-d <delim:string> 分隔符。')
     .usage(`- cut <index> <message...>\n- cut [start]:[end] <message...>`)
     .example('cut 1 apple cat dog apple')
