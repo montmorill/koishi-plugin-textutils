@@ -21,11 +21,6 @@ export function apply(ctx: Context, config: Config) {
     return config.markdown ? h('markdown', message) : message
   }
 
-  ctx.command('echomd <message:text>', { hidden: true, authority: 4 })
-    .action((_, message) => markdown(message))
-  ctx.command('echotex <message:text>', { hidden: true, authority: 4 })
-    .action((_, message) => markdown(`$$${message}$$`))
-
   ctx.command('count <message:text>', '计算字段数。')
     .option('delimiter', '-d <delim:string> 分隔符。')
     .option('unique', '-u 去重计数。')
