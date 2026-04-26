@@ -26,6 +26,19 @@ export function apply(ctx: Context, config: Config) {
   ctx.command('echotex <message:text>', { hidden: true, authority: 4 })
     .action((_, message) => markdown(`$$${message}$$`))
 
+  function cut(start: number, end: number) {
+    return (text: string) => {
+      const s = start < 0 ? text.length + start : start
+      const e = end < 0 ? text.length + end : end || text.length
+
+      if (s <= e)
+        return text.slice(s, e)
+
+      const reversed = Array.from(text).reverse().join('')
+      return reversed.slice(text.length - s, text.length - e)
+    }
+  }
+
   ctx.command('cut <range:string> <message:text>')
     .option('delimiter', '-d <delim:string> 分隔符。')
     .action(({ options }, range, message) => {
@@ -36,16 +49,7 @@ export function apply(ctx: Context, config: Config) {
       else
         start = end = Number(range)
       return message.split(delim)
-        .map((text) => {
-          const s = start < 0 ? text.length + start : start
-          const e = end < 0 ? text.length + end : end || text.length
-
-          if (s <= e)
-            return text.slice(s, e)
-
-          const reversed = Array.from(text).reverse().join('')
-          return reversed.slice(text.length - s, text.length - e)
-        })
+        .map(cut(start, end))
         .join(delim)
     })
 
