@@ -7,19 +7,23 @@ export * from './utils'
 export const name = 'montmorill'
 
 export interface Config {
-  markdown: boolean
   delimiter: string
 }
 
 export const Config: Schema<Config> = Schema.object({
-  markdown: Schema.boolean().default(true).description('启用Markdown格式。'),
   delimiter: Schema.string().default(' ').description('默认字段分隔符。'),
 })
 
 export function apply(ctx: Context, config: Config) {
-  function markdown(message: string) {
-    return config.markdown ? h('markdown', message) : message
-  }
+  ctx.command('echomd <message:text>', '发送Markdown格式的消息。')
+    .action((_, message) => {
+      return h('markdown', message)
+    })
+
+  ctx.command('echotex <message:text>', '发送 Tex 格式的消息。')
+    .action((_, message) => {
+      return h('markdown', `$$${message}$$`)
+    })
 
   ctx.command('count <message:text>', '计算字段数。')
     .option('delimiter', '-d <delim:string> 分隔符。')
@@ -74,7 +78,7 @@ export function apply(ctx: Context, config: Config) {
         .filter(field => field.match(regex))
         .join(delimiter)
       // eslint-disable-next-line style/multiline-ternary
-      return options?.plain ? haystack : markdown(haystack
+      return options?.plain ? haystack : h('markdown', haystack
         .replaceAll(regex, match => `**${match}**`)
         .replaceAll('****', ''))
     })
