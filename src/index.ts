@@ -59,7 +59,7 @@ export function apply(ctx: Context, config: Config) {
         .join(delim)
     })
 
-  ctx.command('count <message:text>', '计算字符串长度。')
+  ctx.command('count <message:text>', '计算字段数。')
     .option('delimiter', '-d <delim:string> 分隔符。')
     .option('unique', '-u 去重计数。')
     .action(({ options }, message = '') => {
@@ -69,7 +69,7 @@ export function apply(ctx: Context, config: Config) {
       return String(message.split(delim).length)
     })
 
-  ctx.command('grep <needle:string> <haystack:text>')
+  ctx.command('grep <needle:string> <haystack:text>', '搜索字符串中的子字符串。')
     .option('delimiter', '-d <delim:string> 分隔符。')
     .action(({ options }, needle, haystack) => {
       const sep = options?.delimiter || config.delimiter
