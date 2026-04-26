@@ -19,9 +19,8 @@ export function shortcut(canEnter: boolean | undefined, text: string, show?: str
     : canEnter ? shortcut.enter(text) : shortcut.input(text)
 }
 
-shortcut.enter = (text: string) => `<qqbot-cmd-enter text=${
-  JSON.stringify(encodeURIComponent(text))
-} />`
+shortcut.enter = (text: string) => `<qqbot-cmd-enter text=${JSON.stringify(encodeURIComponent(text))
+  } />`
 
 /* eslint-disable antfu/if-newline */
 shortcut.input = (text: string, show?: string, reference?: boolean) => {
@@ -113,16 +112,12 @@ button.permission = function (data: Xor<
     return { type: PermissionType.Roles, specify_role_ids: data.roles }
 }
 
-button.row = function (...buttons: ReturnType<typeof button>[]) {
-  return { buttons }
-}
-
-button.keyboard = function (...rows: ReturnType<typeof button.row>[]) {
-  return { content: { rows } }
-}
-
-export function withKeyboard(content: string, ...rows: ReturnType<typeof button.row>[]) {
-  return { content, ...rows.length ? { keyboard: button.keyboard(...rows) } : {},
+export function withKeyboard(content: string, rows: ReturnType<typeof button>[][]) {
+  return {
+    content,
+    keyboard: {
+      rows: rows.map(buttons => ({ buttons })),
+    },
   }
 }
 
