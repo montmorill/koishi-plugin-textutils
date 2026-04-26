@@ -1,5 +1,5 @@
 import type { Context } from 'koishi'
-import {} from '@koishijs/plugin-help'
+import { } from '@koishijs/plugin-help'
 import { h, Schema } from 'koishi'
 
 export * from './utils'
@@ -30,9 +30,22 @@ export function apply(ctx: Context, config: Config) {
     .option('delimiter', '-d <delim:string> 分隔符。')
     .action(({ options }, range, message) => {
       const delim = options?.delimiter || config.delimiter
-      const [start, end] = range.split(':').map(Number)
+      let start: number, end: number
+      if (range.includes(':'))
+        [start, end] = range.split(':').map(Number)
+      else
+        start = end = Number(range)
       return message.split(delim)
-        .map(text => text.slice((start || 1) - 1, end || text.length))
+        .map((text) => {
+          start = start < 0 ? text.length + start : start
+          end = end < 0 ? text.length + end : end || text.length
+
+          if (start <= end)
+            return text.slice(start, end)
+
+          const reversed = Array.from(text).reverse().join('')
+          return reversed.slice(text.length - start, text.length - end)
+        })
         .join(delim)
     })
 
