@@ -37,14 +37,14 @@ export function apply(ctx: Context, config: Config) {
         start = end = Number(range)
       return message.split(delim)
         .map((text) => {
-          start = start < 0 ? text.length + start : start
-          end = end < 0 ? text.length + end : end || text.length
+          const s = start < 0 ? text.length + start : start
+          const e = end < 0 ? text.length + end : end || text.length
 
-          if (start <= end)
-            return text.slice(start, end)
+          if (s <= e)
+            return text.slice(s, e)
 
           const reversed = Array.from(text).reverse().join('')
-          return reversed.slice(text.length - start, text.length - end)
+          return reversed.slice(text.length - s, text.length - e)
         })
         .join(delim)
     })
