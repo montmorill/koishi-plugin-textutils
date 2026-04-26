@@ -26,6 +26,16 @@ export function apply(ctx: Context, config: Config) {
   ctx.command('echotex <message:text>', { hidden: true, authority: 4 })
     .action((_, message) => markdown(`$$${message}$$`))
 
+  ctx.command('count <message:text>', '计算字段数。')
+    .option('delimiter', '-d <delim:string> 分隔符。')
+    .option('unique', '-u 去重计数。')
+    .action(({ options }, message = '') => {
+      const delim = options?.delimiter || config.delimiter
+      if (options?.unique)
+        return String(new Set(message.split(delim)).size)
+      return String(message.split(delim).length)
+    })
+
   ctx.command('cut <range:string> <message:text>', '按指定范围裁剪每个字段，支持负索引和反转区间。')
     .option('delimiter', '-d <delim:string> 分隔符。')
     .usage(`- cut <index> <message...>\n- cut [start]:[end] <message...>`)
@@ -57,16 +67,6 @@ export function apply(ctx: Context, config: Config) {
           return reversed.slice(field.length - s, field.length - e + 1)
         })
         .join(delimiter)
-    })
-
-  ctx.command('count <message:text>', '计算字段数。')
-    .option('delimiter', '-d <delim:string> 分隔符。')
-    .option('unique', '-u 去重计数。')
-    .action(({ options }, message = '') => {
-      const delim = options?.delimiter || config.delimiter
-      if (options?.unique)
-        return String(new Set(message.split(delim)).size)
-      return String(message.split(delim).length)
     })
 
   ctx.command('grep <needle:string> <haystack:text>', '搜索字符串中的子字符串。')
