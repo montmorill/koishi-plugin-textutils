@@ -24,7 +24,7 @@ export function apply(ctx: Context, config: Config) {
   ctx.command('count <message:text>', '计算字段数。')
     .option('delimiter', '-d <delim:string> 分隔符。')
     .option('unique', '-u 去重计数。')
-    .action(({ options }, message = '') => {
+    .action(({ options }, message) => {
       const delim = options?.delimiter || config.delimiter
       if (options?.unique)
         return String(new Set(message.split(delim)).size)
