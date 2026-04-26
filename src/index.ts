@@ -63,6 +63,16 @@ export function apply(ctx: Context, config: Config) {
         .join(delim)
     })
 
+  ctx.command('count <message:text>', '计算字符串长度。')
+    .option('delimiter', '-d <delim:string> 分隔符。')
+    .option('unique', '-u 去重计数。')
+    .action(({ options }, message = '') => {
+      const delim = options?.delimiter || config.delimiter
+      if (options?.unique)
+        return String(new Set(message.split(delim)).size)
+      return String(message.split(delim).length)
+    })
+
   ctx.command('grep <needle:string> <haystack:text>')
     .option('delimiter', '-d <delim:string> 分隔符。')
     .action(({ options }, needle, haystack) => {
