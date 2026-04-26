@@ -12,8 +12,8 @@ export interface Config {
 }
 
 export const Config: Schema<Config> = Schema.object({
-  markdown: Schema.boolean().default(true),
-  delimiter: Schema.string().default(' '),
+  markdown: Schema.boolean().default(true).description('启用Markdown格式。'),
+  delimiter: Schema.string().default(' ').description('默认字段分隔符。'),
 })
 
 export function apply(ctx: Context, config: Config) {
@@ -35,7 +35,7 @@ export function apply(ctx: Context, config: Config) {
     .example('cut 1:3 hello season')
     .example('cut :-6 montmorillonite')
     .action(({ options }, range = '-', message = '') => {
-      const delim = options?.delimiter || config.delimiter
+      const delimiter = options?.delimiter || config.delimiter
       // Fix ranges that starts with '-'
       for (const [key, value] of Object.entries(options || {})) {
         range += key
@@ -46,17 +46,17 @@ export function apply(ctx: Context, config: Config) {
         [start, end] = range.split(':').map(Number)
       else
         start = end = Number(range)
-      return message.split(delim)
-        .map((text: string) => {
-          const s = start < 0 ? text.length + start + 1 : start || 1
-          const e = end < 0 ? text.length + end + 1 : end || text.length
+      return message.split(delimiter)
+        .map((field: string) => {
+          const s = start < 0 ? field.length + start + 1 : start || 1
+          const e = end < 0 ? field.length + end + 1 : end || field.length
 
           if (s <= e)
-            return text.slice(s - 1, e)
-          const reversed = Array.from(text).reverse().join('')
-          return reversed.slice(text.length - s, text.length - e + 1)
+            return field.slice(s - 1, e)
+          const reversed = Array.from(field).reverse().join('')
+          return reversed.slice(field.length - s, field.length - e + 1)
         })
-        .join(delim)
+        .join(delimiter)
     })
 
   ctx.command('count <message:text>', '计算字段数。')
@@ -71,11 +71,15 @@ export function apply(ctx: Context, config: Config) {
 
   ctx.command('grep <needle:string> <haystack:text>', '搜索字符串中的子字符串。')
     .option('delimiter', '-d <delim:string> 分隔符。')
+    .option('plain', '-p 原始格式。')
     .action(({ options }, needle, haystack) => {
-      const sep = options?.delimiter || config.delimiter
+      const delimiter = options?.delimiter || config.delimiter
       const regex = new RegExp(needle, 'g')
-      return markdown(haystack.split(sep)
-        .filter(item => item.match(regex)).join(sep)
+      haystack = haystack.split(delimiter)
+        .filter(field => field.match(regex))
+        .join(delimiter)
+      // eslint-disable-next-line style/multiline-ternary
+      return options?.plain ? haystack : markdown(haystack
         .replaceAll(regex, match => `**${match}**`)
         .replaceAll('****', ''))
     })
