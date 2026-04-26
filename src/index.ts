@@ -26,18 +26,6 @@ export function apply(ctx: Context, config: Config) {
   ctx.command('echotex <message:text>', { hidden: true, authority: 4 })
     .action((_, message) => markdown(`$$${message}$$`))
 
-  function cut(start: number, end: number) {
-    return (text: string) => {
-      const s = start < 0 ? text.length + start + 1 : start || 1
-      const e = end < 0 ? text.length + end + 1 : end || text.length
-
-      if (s <= e)
-        return text.slice(s - 1, e)
-      const reversed = Array.from(text).reverse().join('')
-      return reversed.slice(text.length - s, text.length - e + 1)
-    }
-  }
-
   ctx.command('cut <range:string> <message:text>', '按指定范围裁剪每个字段，支持负索引和反转区间。')
     .option('delimiter', '-d <delim:string> 分隔符。')
     .usage(`- cut <index> <message...>\n- cut [start]:[end] <message...>`)
@@ -59,7 +47,15 @@ export function apply(ctx: Context, config: Config) {
       else
         start = end = Number(range)
       return message.split(delim)
-        .map(cut(start, end))
+        .map((text: string) => {
+          const s = start < 0 ? text.length + start + 1 : start || 1
+          const e = end < 0 ? text.length + end + 1 : end || text.length
+
+          if (s <= e)
+            return text.slice(s - 1, e)
+          const reversed = Array.from(text).reverse().join('')
+          return reversed.slice(text.length - s, text.length - e + 1)
+        })
         .join(delim)
     })
 
