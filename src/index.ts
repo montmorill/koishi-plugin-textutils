@@ -28,21 +28,31 @@ export function apply(ctx: Context, config: Config) {
 
   function cut(start: number, end: number) {
     return (text: string) => {
-      const s = start < 0 ? text.length + start : start
-      const e = end < 0 ? text.length + end : end || text.length
+      const s = start < 0 ? text.length + start + 1 : start || 1
+      const e = end < 0 ? text.length + end + 1 : end || text.length
 
       if (s <= e)
-        return text.slice(s, e)
-
+        return text.slice(s - 1, e)
       const reversed = Array.from(text).reverse().join('')
-      return reversed.slice(text.length - s, text.length - e)
+      return reversed.slice(text.length - s, text.length - e + 1)
     }
   }
 
-  ctx.command('cut <range:string> <message:text>')
+  ctx.command('cut <range:string> <message:text>', '按指定范围裁剪每个字段，支持负索引和反转区间。')
     .option('delimiter', '-d <delim:string> 分隔符。')
-    .action(({ options }, range, message) => {
+    .usage(`- cut <index> <message...>\n- cut [start]:[end] <message...>`)
+    .example('cut 1 apple cat dog apple')
+    .example('cut 5:2 abcdefg')
+    .example('cut 2: hello season')
+    .example('cut 1:3 hello season')
+    .example('cut :-6 montmorillonite')
+    .action(({ options }, range = '-', message = '') => {
       const delim = options?.delimiter || config.delimiter
+      // Fix ranges that starts with '-'
+      for (const [key, value] of Object.entries(options || {})) {
+        range += key
+        message = value + message
+      }
       let start: number, end: number
       if (range.includes(':'))
         [start, end] = range.split(':').map(Number)
