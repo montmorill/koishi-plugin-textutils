@@ -77,6 +77,8 @@ export function apply(ctx: Context, config: Config) {
       haystack = haystack.split(delimiter)
         .filter(field => field.match(regex))
         .join(delimiter)
+      if (!haystack)
+        return '未找到匹配项。'
       // eslint-disable-next-line style/multiline-ternary
       return options?.plain ? haystack : h('markdown', haystack
         .replaceAll(regex, match => `**${match}**`)
