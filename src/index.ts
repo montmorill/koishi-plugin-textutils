@@ -15,16 +15,6 @@ export const Config: Schema<Config> = Schema.object({
 })
 
 export function apply(ctx: Context, config: Config) {
-  ctx.command('echomd <message:text>', '发送Markdown格式的消息。', { hidden: true })
-    .action((_, message) => {
-      return h('markdown', message)
-    })
-
-  ctx.command('echotex <message:text>', '发送 Tex 格式的消息。', { hidden: true })
-    .action((_, message) => {
-      return h('markdown', `$$${message}$$`)
-    })
-
   ctx.command('count <message:text>', '计算字段数。')
     .option('delimiter', '-d <delim:string> 分隔符。')
     .option('unique', '-u 去重计数。')
