@@ -60,11 +60,12 @@ export function apply(ctx: Context, config: Config) {
   ctx.command('grep <needle:string> <haystack:text>', '搜索字符串中的子字符串。')
     .option('delimiter', '-d <delim:string> 分隔符。')
     .option('plain', '-p 原始格式。')
+    .option('invert', '-i 反转匹配。')
     .action(({ options }, needle, haystack) => {
       const delimiter = options?.delimiter || config.delimiter
       const regex = new RegExp(needle, 'g')
       haystack = haystack.split(delimiter)
-        .filter(field => field.match(regex))
+        .filter(field => !!options?.invert !== !!field.match(regex))
         .join(delimiter)
       if (!haystack)
         return '未找到匹配项。'
