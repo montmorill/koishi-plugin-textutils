@@ -91,7 +91,7 @@ export function apply(ctx: Context, config: Config) {
 
   ctx.command('shuf <message:text>', '随机打乱字段顺序。')
     .option('delimiter', '-d <delim:string> 分隔符。')
-    .option('count', '-n <count:number> 显示前n个字段。')
+    .option('count', '-n <count:number> 显示 n 个字段。')
     .action(({ options }, message) => {
       const delimiter = options?.delimiter || config.delimiter
       return Random
