@@ -7,10 +7,12 @@ export * from './utils'
 export const name = 'montmorill'
 
 export interface Config {
+  markdown: boolean
   delimiter: string
 }
 
 export const Config: Schema<Config> = Schema.object({
+  markdown: Schema.boolean().default(true).description('启用 Markdown 输出。'),
   delimiter: Schema.string().default(' ').description('默认字段分隔符。'),
 })
 
@@ -70,7 +72,7 @@ export function apply(ctx: Context, config: Config) {
 
   ctx.command('grep <needle:string> <haystack:text>', '搜索字符串中的子字符串。')
     .option('delimiter', '-d <delim:string> 分隔符。')
-    .option('plain', '-p 原始格式。')
+    .option('no-markdown', '-M 禁用 Markdown 输出。')
     .option('invert', '-i 反转匹配。')
     .action(({ options }, needle, haystack) => {
       const delimiter = options?.delimiter || config.delimiter
@@ -80,8 +82,9 @@ export function apply(ctx: Context, config: Config) {
         .join(delimiter)
       if (!haystack)
         return '未找到匹配项。'
-      // eslint-disable-next-line style/multiline-ternary
-      return options?.plain ? haystack : h('markdown', haystack
+      if (options?.['no-markdown'] || !config.markdown)
+        return haystack
+      return h('markdown', haystack
         .replaceAll(regex, match => `**${match}**`)
         .replaceAll('****', ''))
     })
