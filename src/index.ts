@@ -19,33 +19,44 @@ export function apply(ctx: Context, config: Config) {
     .option('delimiter', '-d <delim:string> 分隔符。')
     .option('unique', '-u 去重计数。')
     .action(({ options }, message) => {
-      const delim = options?.delimiter || config.delimiter
+      const delimiter = options?.delimiter || config.delimiter
       if (options?.unique)
-        return String(new Set(message.split(delim)).size)
-      return String(message.split(delim).length)
+        return String(new Set(message.split(delimiter)).size)
+      return String(message.split(delimiter).length)
     })
 
   ctx.command('cut <range:string> <message:text>', '按指定范围裁剪每个字段。')
     .option('delimiter', '-d <delim:string> 分隔符。')
     .usage(`- cut <index> <message...>\n- cut [start]:[end] <message...>`)
-    .example('cut 0 apple cat dog apple')
+    .example('cut 0 apple card dog apple')
+    .example('cut -1 apple card dog apple')
     .example('cut 5:1 abcdefg')
     .example('cut 1: hello season')
     .example('cut :3 hello season')
     .example('cut :-5 montmorillonite')
-    .action(({ options }, range = '-', message = '') => {
+    .action(({ options }, range = '', message = '') => {
       const delimiter = options?.delimiter || config.delimiter
+      delete options?.delimiter
+      let fields = message.split(delimiter)
       // Fix ranges that starts with '-'
-      for (const [key, value] of Object.entries(options || {})) {
-        range += key
-        message = value + message
+      const entries = Object.entries(options || {})
+      if (entries.length) {
+        fields.unshift(range)
+        range = '-'
+        for (const [key, value] of entries) {
+          range += key
+          fields.unshift(value)
+        }
       }
+      fields = fields.map(field => field.trim()).filter(Boolean)
+      if (!fields.length)
+        return '未提供文本内容！'
       let start: number, end: number
       if (range.includes(':'))
         [start, end] = range.split(':').map(Number)
       else
         end = (start = Number(range)) + 1
-      return message.split(delimiter)
+      return fields
         .map((field: string) => {
           const s = start < 0 ? field.length + start : start || 0
           const e = end < 0 ? field.length + end : end || field.length
