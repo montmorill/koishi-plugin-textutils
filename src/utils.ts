@@ -1,4 +1,4 @@
-/* eslint-disable style/max-statements-per-line */
+/* eslint-disable style/max-statements-per-line,antfu/if-newline */
 
 import type { Session } from 'koishi'
 import { h } from 'koishi'
@@ -21,7 +21,6 @@ export function shortcut(canEnter: boolean | undefined, text: string, show?: str
 
 shortcut.enter = (text: string) => `<qqbot-cmd-enter text=${JSON.stringify(encodeURIComponent(text))} />`
 
-/* eslint-disable antfu/if-newline */
 shortcut.input = (text: string, show?: string, reference?: boolean) => {
   let sb = `<qqbot-cmd-input text=${JSON.stringify(encodeURIComponent(text))}`
   if (show) sb += ` show=${JSON.stringify(decodeURIComponent(show))}`
