@@ -1,5 +1,5 @@
 import type { Context } from 'koishi'
-import { } from '@koishijs/plugin-help'
+import {} from '@koishijs/plugin-help'
 import { h, Random, Schema } from 'koishi'
 
 export * from './utils'
