@@ -28,11 +28,11 @@ export function apply(ctx: Context, config: Config) {
   ctx.command('cut <range:string> <message:text>', '按指定范围裁剪每个字段。')
     .option('delimiter', '-d <delim:string> 分隔符。')
     .usage(`- cut <index> <message...>\n- cut [start]:[end] <message...>`)
-    .example('cut 1 apple cat dog apple')
-    .example('cut 5:2 abcdefg')
-    .example('cut 2: hello season')
-    .example('cut 1:3 hello season')
-    .example('cut :-6 montmorillonite')
+    .example('cut 0 apple cat dog apple')
+    .example('cut 5:1 abcdefg')
+    .example('cut 1: hello season')
+    .example('cut :3 hello season')
+    .example('cut :-5 montmorillonite')
     .action(({ options }, range = '-', message = '') => {
       const delimiter = options?.delimiter || config.delimiter
       // Fix ranges that starts with '-'
@@ -44,16 +44,15 @@ export function apply(ctx: Context, config: Config) {
       if (range.includes(':'))
         [start, end] = range.split(':').map(Number)
       else
-        start = end = Number(range)
+        end = (start = Number(range)) + 1
       return message.split(delimiter)
         .map((field: string) => {
-          const s = start < 0 ? field.length + start + 1 : start || 1
-          const e = end < 0 ? field.length + end + 1 : end || field.length
-
-          if (s <= e)
-            return field.slice(s - 1, e)
+          const s = start < 0 ? field.length + start : start || 0
+          const e = end < 0 ? field.length + end : end || field.length
+          // eslint-disable-next-line antfu/if-newline
+          if (s <= e) return field.slice(s, e)
           const reversed = Array.from(field).reverse().join('')
-          return reversed.slice(field.length - s, field.length - e + 1)
+          return reversed.slice(field.length - s, field.length - e)
         })
         .join(delimiter)
     })
