@@ -28,13 +28,19 @@ export function apply(ctx: Context, config: Config) {
     })
 
   function cut(start: number, end: number) {
+    if (start === end) {
+      return <T>(sequence: T[]) => [sequence[
+        start < 0 ? sequence.length + start : start - 1
+      ]]
+    }
+    end -= 1
     return <T>(sequence: T[]) => {
-      const s = start < 0 ? sequence.length + start : start || 0
-      const e = end < 0 ? sequence.length + end : end || sequence.length
-      // eslint-disable-next-line antfu/if-newline
-      if (s <= e) return sequence.slice(s, e)
-      const reversed = Array.from(sequence).reverse()
-      return reversed.slice(sequence.length - s, sequence.length - e)
+      const s = start < 0 ? sequence.length + start + 1 : start
+      const e = end < 0 ? sequence.length + end : end
+      if (s <= e)
+        return sequence.slice(s, e + 1)
+      return sequence.reverse()
+        .slice(sequence.length - s, sequence.length - e + 1)
     }
   }
 
@@ -42,9 +48,9 @@ export function apply(ctx: Context, config: Config) {
     .option('field', '-f 按字段而不是字符切割。')
     .option('delimiter', '-d <delim:string> 分隔符。')
     .usage(`- cut <index> <message...>\n- cut [start]:[end] <message...>`)
-    .example('cut 0 apple card dog apple')
+    .example('cut 1 apple card dog apple')
     .example('cut -1 apple card dog apple')
-    .example('cut -f 1 apple card dog apple')
+    .example('cut -f 2 apple card dog apple')
     .example('cut 5:1 abcdefg')
     .example('cut 1: hello season')
     .example('cut :3 hello season')
@@ -65,12 +71,10 @@ export function apply(ctx: Context, config: Config) {
       fields = fields.map(field => field.trim()).filter(Boolean)
       if (!fields.length)
         return '未提供文本内容！'
-      let start: number, end: number
-      if (range.includes(':'))
-        [start, end] = range.split(':').map(Number)
-      else
-        end = (start = Number(range)) + 1
-      const cutter = cut(start, end)
+      let [start, end] = range.split(':')
+      if (!range.includes(':'))
+        end = start
+      const cutter = cut(Number(start), Number(end))
       if (options?.field)
         return cutter(fields).join(delimiter)
       return fields.map(field =>
