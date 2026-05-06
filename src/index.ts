@@ -1,6 +1,6 @@
 import type { Context } from 'koishi'
 import {} from '@koishijs/plugin-help'
-import { h, Random, Schema } from 'koishi'
+import { h, omit, Random, Schema } from 'koishi'
 
 export * from './utils'
 
@@ -27,27 +27,39 @@ export function apply(ctx: Context, config: Config) {
       return String(message.split(delimiter).length)
     })
 
+  function cut(start: number, end: number) {
+    return <T>(sequence: T[]) => {
+      const s = start < 0 ? sequence.length + start : start || 0
+      const e = end < 0 ? sequence.length + end : end || sequence.length
+      // eslint-disable-next-line antfu/if-newline
+      if (s <= e) return sequence.slice(s, e)
+      const reversed = Array.from(sequence).reverse()
+      return reversed.slice(sequence.length - s, sequence.length - e)
+    }
+  }
+
   ctx.command('cut <range:string> <message:text>', '按指定范围裁剪每个字段。')
+    .option('field', '-f 按字段而不是字符切割。')
     .option('delimiter', '-d <delim:string> 分隔符。')
     .usage(`- cut <index> <message...>\n- cut [start]:[end] <message...>`)
     .example('cut 0 apple card dog apple')
     .example('cut -1 apple card dog apple')
+    .example('cut -f 1 apple card dog apple')
     .example('cut 5:1 abcdefg')
     .example('cut 1: hello season')
     .example('cut :3 hello season')
     .example('cut :-5 montmorillonite')
     .action(({ options }, range = '', message = '') => {
       const delimiter = options?.delimiter || config.delimiter
-      delete options?.delimiter
       let fields = message.split(delimiter)
       // Fix ranges that starts with '-'
-      const entries = Object.entries(options || {})
+      const entries = Object.entries(omit(options || {}, ['delimiter', 'field']))
       if (entries.length) {
         fields.unshift(range)
         range = '-'
         for (const [key, value] of entries) {
           range += key
-          fields.unshift(value)
+          fields.unshift(value as string)
         }
       }
       fields = fields.map(field => field.trim()).filter(Boolean)
@@ -58,16 +70,11 @@ export function apply(ctx: Context, config: Config) {
         [start, end] = range.split(':').map(Number)
       else
         end = (start = Number(range)) + 1
-      return fields
-        .map((field: string) => {
-          const s = start < 0 ? field.length + start : start || 0
-          const e = end < 0 ? field.length + end : end || field.length
-          // eslint-disable-next-line antfu/if-newline
-          if (s <= e) return field.slice(s, e)
-          const reversed = Array.from(field).reverse().join('')
-          return reversed.slice(field.length - s, field.length - e)
-        })
-        .join(delimiter)
+      const cutter = cut(start, end)
+      if (options?.field)
+        return cutter(fields).join(delimiter)
+      return fields.map(field =>
+        cutter(Array.from(field)).join('')).join(delimiter)
     })
 
   ctx.command('grep <needle:string> <haystack:text>', '搜索字符串中的子字符串。')
