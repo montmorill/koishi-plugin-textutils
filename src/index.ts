@@ -102,4 +102,7 @@ export function apply(ctx: Context) {
         .pick(fields, options?.count || 1)
         .join(' ')
     })
+
+  ctx.command('xargs <message:text>', '执行指定命令。')
+    .action(({ session }, message) => session?.execute(message, true))
 }
