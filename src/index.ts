@@ -102,7 +102,4 @@ export function apply(ctx: Context) {
         .pick(fields, options?.count || 1)
         .join(' ')
     })
-
-  ctx.command('xargs <message:text>', '转换为命令行参数。')
-    .action((_, message) => message.split(/\s+/).join(' '))
 }
