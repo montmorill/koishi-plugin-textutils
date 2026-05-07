@@ -94,12 +94,15 @@ export function apply(ctx: Context) {
         .replaceAll('****', ''))
     })
 
-  ctx.command('shuf <args...:string>', '随机打乱字段顺序。')
+  ctx.command('shuf <fields...:string>', '随机打乱字段顺序。')
     .option('delimiter', '-d <delim:string> 分隔符。')
     .option('count', '-n <count:number> 显示 n 个字段。')
-    .action(({ options }, ...args) => {
+    .action(({ options }, ...fields) => {
       return Random
-        .pick(args, options?.count || 1)
+        .pick(fields, options?.count || 1)
         .join(' ')
     })
+
+  ctx.command('xargs <message:text>', '转换为命令行参数。')
+    .action((_, message) => message.split(/\s+/).join(' '))
 }
