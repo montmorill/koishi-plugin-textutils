@@ -136,25 +136,26 @@ export function apply(ctx: Context) {
       h('markdown', `\`\`\`${options?.lang || ''}\n${message}\n\`\`\``))
 
   ctx.command('table <message:text>', '渲染为表格。')
-    .action((_, message) => {
+    .option('no-header', '-H 无表头。')
+    .option('transpose', '-t 转置。')
+    .action(({ options }, message) => {
       const result = []
-      const lines = message.split('\n')
+      let heading = true
+      let rows = message.split('\n')
         .filter(line => line.trim())
         .map(line => line.split(' '))
-      const rowCounts = Math.max(...lines.map(cols => cols.length))
-      for (let index = 0, heading = false; index < rowCounts; index++) {
-        const cols = lines.map(rows => rows[index]?.replaceAll('|', '\\|') || '')
-        if (index === 0) {
-          for (let i = 0; i < cols.length; i++) {
-            if (cols[i].endsWith(':')) {
-              cols[i] = cols[i].slice(0, -1)
-              heading = true
-            }
-          }
-        }
-        result.push(`|${cols.join('|')}|`)
+      if (options?.transpose)
+        rows = rows[0].map((_, index) => rows.map(row => row[index]))
+      if (options?.['no-header'])
+        rows.unshift([])
+      const maxCols = Math.max(...rows.map(row => row.length))
+      for (const row of rows) {
+        result.push(`|${Array.from(
+          { length: maxCols },
+          (_, idx) => row[idx]?.replaceAll('|', '\\|') ?? '',
+        ).join('|')}|`)
         if (heading) {
-          result.push(`${'|-'.repeat(cols.length)}|`)
+          result.push(`${'|-'.repeat(maxCols)}|`)
           heading = false
         }
       }
