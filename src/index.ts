@@ -123,4 +123,41 @@ export function apply(ctx: Context) {
 
   ctx.command('xargs <message:text>', '执行指定命令。')
     .action(({ session }, message) => session?.execute(message, true))
+
+  ctx.command('markdown <message:text>', '渲染为 markdown。')
+    .action((_, message) => h('markdown', message))
+
+  ctx.command('tex <message:text>', '渲染为 TeX。')
+    .action((_, message) => h('markdown', `$$\n${message}\n$$`))
+
+  ctx.command('code <message:text>', '渲染为代码块。')
+    .option('lang', '-l 语言标识符。')
+    .action(({ options }, message) =>
+      h('markdown', `\`\`\`${options?.lang || ''}\n${message}\n\`\`\``))
+
+  ctx.command('table <message:text>', '渲染为表格。')
+    .action((_, message) => {
+      const result = []
+      const lines = message.split('\n')
+        .filter(line => line.trim())
+        .map(line => line.split(' '))
+      const rowCounts = Math.max(...lines.map(cols => cols.length))
+      for (let index = 0, heading = false; index < rowCounts; index++) {
+        const cols = lines.map(rows => rows[index]?.replaceAll('|', '\\|') || '')
+        if (index === 0) {
+          for (let i = 0; i < cols.length; i++) {
+            if (cols[i].endsWith(':')) {
+              cols[i] = cols[i].slice(0, -1)
+              heading = true
+            }
+          }
+        }
+        result.push(`|${cols.join('|')}|`)
+        if (heading) {
+          result.push(`${'|-'.repeat(cols.length)}|`)
+          heading = false
+        }
+      }
+      return h('markdown', result.join('\n'))
+    })
 }
