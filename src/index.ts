@@ -41,7 +41,7 @@ export function apply(ctx: Context) {
   ctx.command('cut <range:string> <fields...:string>', '按指定范围裁剪每个字段。')
     .option('field', '-f 按字段而不是字符切割。')
     .option('delimiter', '-d <delim:string> 分隔符。')
-    .usage(`- cut <index> <fields...>\n- cut [start]:[end] <fields...>`)
+    .usage(`- cut [-f] <index> <fields...>\n- cut [-f] [start]:[end] <fields...>`)
     .example('cut 1 apple card dog apple')
     .example('cut -1 apple card dog apple')
     .example('cut -f 2 apple card dog apple')
@@ -49,10 +49,12 @@ export function apply(ctx: Context) {
     .example('cut 1: hello season')
     .example('cut :3 hello season')
     .example('cut :-5 montmorillonite')
-    .action(({ options }, range = '', ...fields) => {
-      if (options?.field && options?.delimiter)
-        return '不能同时指定 -f 和 -d 选项！'
-        // Fix ranges that starts with '-'
+    .action(({ session, options }, range = '', ...fields) => {
+      const delimiter = options?.delimiter || ''
+      if (options?.field && options?.delimiter) {
+        return void session?.send('cut: 不能同时传递 -d 与 -f 选项。')
+      }
+      // Fix ranges that starts with '-'
       const entries = Object.entries(omit(options || {}, ['delimiter', 'field']))
       if (entries.length) {
         fields.unshift(range)
@@ -62,45 +64,57 @@ export function apply(ctx: Context) {
           fields.unshift(value as string)
         }
       }
+      if (!range)
+        return void session?.send('cut: 未提供索引范围。')
       if (!fields.length)
-        return '未提供文本内容！'
+        return void session?.send('cut: 未提供目标文本。')
       let [start, end] = range.split(':')
       if (!range.includes(':'))
         end = start
       const cutter = cut(Number(start), Number(end))
-      if (options?.field)
-        return cutter(fields).join(' ')
-      return fields.map(field => cutter(
-        field.split(options?.delimiter || ''),
-      ).join('')).join(' ')
+      const result = options?.field
+        ? cutter(fields).join(' ')
+        : fields.map(field => cutter(field.split(delimiter),
+          ).join(delimiter)).join(' ')
+      if (!result) {
+        return void session?.send([
+          'cut',
+          options?.field ? '-f' : null,
+          options?.delimiter ? `-d ${JSON.stringify(delimiter)}` : null,
+          `${fields.join(' ')}: 无匹配结果。`,
+        ].filter(Boolean).join(' '))
+      }
+      return result
     })
 
-  ctx.command('grep <needle:string> <haystack:text>', '搜索字符串中的子字符串。')
-    .option('delimiter', '-d <delim:string> 分隔符。')
+  ctx.command('grep <needle:string> <fields...:string>', '搜索目标文本中的模式。')
     .option('markdown', '-m 启用 Markdown 输出。')
     .option('invert', '-i 反转匹配。')
-    .action(({ options }, needle, haystack) => {
-      const delimiter = options?.delimiter || ' '
+    .action(({ session, options }, needle, ...fields) => {
+      if (!needle)
+        return void session?.send('grep: 未提供搜索模式。')
+      if (!fields.length)
+        return void session?.send('grep: 未提供目标文本。')
       const regex = new RegExp(needle, 'g')
-      haystack = haystack.split(delimiter)
+      const result = fields
         .filter(field => !!options?.invert !== !!field.match(regex))
-        .join(delimiter)
-      if (!haystack)
-        return '未找到匹配项。'
+        .join(' ')
+      if (!result)
+        return void session?.send(`grep ${needle} ${fields}: 无匹配结果。`)
       if (!options?.markdown)
-        return haystack
-      return h('markdown', haystack
+        return result
+      return h('markdown', result
         .replaceAll(regex, match => `**${match}**`)
         .replaceAll('****', ''))
     })
 
-  ctx.command('shuf <fields...:string>', '随机打乱字段顺序。')
+  ctx.command('shuf <fields...:string>', '打乱目标文本。')
     .option('delimiter', '-d <delim:string> 分隔符。')
-    .option('count', '-n <count:number> 显示 n 个字段。')
-    .action(({ options }, ...fields) => {
-      return Random
-        .pick(fields, options?.count || 1)
-        .join(' ')
+    .option('count', '-n <count:number> 输出 n 个字段。')
+    .action(({ session, options }, ...fields) => {
+      if (!fields.length)
+        return void session?.send('shuf: 未提供目标文本。')
+      return Random.pick(fields, options?.count || 1).join(' ')
     })
 
   ctx.command('xargs <message:text>', '执行指定命令。')
