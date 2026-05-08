@@ -68,10 +68,12 @@ export function apply(ctx: Context) {
         return void session?.send('cut: 未提供索引范围。')
       if (!fields.length)
         return void session?.send('cut: 未提供目标文本。')
+
       let [start, end] = range.split(':')
       if (!range.includes(':'))
         end = start
       const cutter = cut(Number(start), Number(end))
+
       const result = options?.field
         ? cutter(fields).join(' ')
         : fields.map(field => cutter(field.split(delimiter),
@@ -95,10 +97,12 @@ export function apply(ctx: Context) {
         return void session?.send('grep: 未提供搜索模式。')
       if (!fields.length)
         return void session?.send('grep: 未提供目标文本。')
+
       const regex = new RegExp(needle, 'g')
       const result = fields
         .filter(field => !!options?.invert !== !!field.match(regex))
         .join(' ')
+
       if (!result)
         return void session?.send(`grep ${needle} ${fields}: 无匹配结果。`)
       if (!options?.markdown)
