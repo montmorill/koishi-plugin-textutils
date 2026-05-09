@@ -159,7 +159,7 @@ export function apply(ctx: Context) {
           heading = false
         }
       }
-      return h('markdown', result.join('\n'))
+      return h('p', h('markdown', result.join('\n')))
     })
 
   ctx.command('chunk <fields...:string>', '将字段列表分行。')
