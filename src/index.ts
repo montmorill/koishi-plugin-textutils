@@ -161,4 +161,14 @@ export function apply(ctx: Context) {
       }
       return h('markdown', result.join('\n'))
     })
+
+  ctx.command('chunk <fields...:string>', '将字段列表分行。')
+    .option('size', '-s <size:number> 每行字段数。')
+    .action(({ options }, ...fields) => {
+      const result = []
+      const size = options?.size || Math.ceil(Math.sqrt(fields.length))
+      for (let i = 0; i < fields.length; i += size)
+        result.push(fields.slice(i, i + size).join(' '))
+      return result.join('\n')
+    })
 }
