@@ -21,6 +21,15 @@ export function apply(ctx: Context) {
       return String(fields.length)
     })
 
+  ctx.command('shuf <fields...:string>', '打乱字段列表。')
+    .option('delimiter', '-d <delim:string> 分隔符。')
+    .option('count', '-n <count:number> 输出 count 个字段。')
+    .action(({ session, options }, ...fields) => {
+      if (!fields.length)
+        return void session?.send('shuf: 未提供字段列表。')
+      return Random.pick(fields, options?.count || 1).join(' ')
+    })
+
   function cut(start: number, end: number) {
     if (start === end) {
       return <T>(sequence: T[]) => [sequence[
@@ -110,15 +119,6 @@ export function apply(ctx: Context) {
       return h('markdown', result
         .replaceAll(regex, match => `**${match}**`)
         .replaceAll('****', ''))
-    })
-
-  ctx.command('shuf <fields...:string>', '打乱字段列表。')
-    .option('delimiter', '-d <delim:string> 分隔符。')
-    .option('count', '-n <count:number> 输出 count 个字段。')
-    .action(({ session, options }, ...fields) => {
-      if (!fields.length)
-        return void session?.send('shuf: 未提供字段列表。')
-      return Random.pick(fields, options?.count || 1).join(' ')
     })
 
   ctx.command('xargs <message:text>', '执行指定命令。')
