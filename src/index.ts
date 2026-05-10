@@ -11,7 +11,7 @@ export interface Config {}
 export const Config: Schema<Config> = Schema.object({})
 
 export function apply(ctx: Context) {
-  ctx.command('count <fields...:string>', '计算字段数。')
+  ctx.command('count <...fields:string>', '计算字段数。')
     .option('unique', '-u 去重计数。')
     .example('count apple card dog apple')
     .example('count -u apple card dog apple')
@@ -21,7 +21,7 @@ export function apply(ctx: Context) {
       return String(fields.length)
     })
 
-  ctx.command('shuf <fields...:string>', '打乱字段列表。')
+  ctx.command('shuf <...fields:string>', '打乱字段列表。')
     .option('delimiter', '-d <delim:string> 分隔符。')
     .option('count', '-n <count:number> 输出 count 个字段。')
     .action(({ session, options }, ...fields) => {
@@ -47,7 +47,7 @@ export function apply(ctx: Context) {
     }
   }
 
-  ctx.command('cut <range:string> <fields...:string>', '按范围裁剪字段。')
+  ctx.command('cut <range:string> <...fields:string>', '按范围裁剪字段。')
     .option('field', '-f 按字段而不是字符切割。')
     .option('delimiter', '-d <delim:string> 分隔符。')
     .usage(`- cut [-f] <index> <fields...>\n- cut [-f] [start]:[end] <fields...>`)
@@ -98,7 +98,7 @@ export function apply(ctx: Context) {
       return result
     })
 
-  ctx.command('grep <needle:string> <fields...:string>', '搜索包含模式的字段。')
+  ctx.command('grep <needle:string> <...fields:string>', '搜索包含模式的字段。')
     .option('markdown', '-m 启用 Markdown 输出。')
     .option('invert', '-i 反转匹配。')
     .action(({ session, options }, needle, ...fields) => {
@@ -160,15 +160,5 @@ export function apply(ctx: Context) {
         }
       }
       return h('p', h('markdown', result.join('\n')))
-    })
-
-  ctx.command('chunk <fields...:string>', '将字段列表分行。')
-    .option('size', '-s <size:number> 每行字段数。')
-    .action(({ options }, ...fields) => {
-      const result = []
-      const size = options?.size || Math.ceil(Math.sqrt(fields.length))
-      for (let i = 0; i < fields.length; i += size)
-        result.push(fields.slice(i, i + size).join(' '))
-      return result.join('\n')
     })
 }
