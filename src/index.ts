@@ -121,9 +121,6 @@ export function apply(ctx: Context) {
         .replaceAll('****', ''))
     })
 
-  ctx.command('xargs <message:text>', '执行指定命令。')
-    .action(({ session }, message) => session?.execute(message, true))
-
   ctx.command('markdown <message:text>', '渲染为 markdown。')
     .action((_, message) => h('markdown', message))
 
