@@ -128,7 +128,7 @@ export function apply(ctx: Context) {
     .action((_, message) => h('markdown', `$$\n${message}\n$$`))
 
   ctx.command('code <message:text>', '渲染为代码块。')
-    .option('lang', '-l 语言标识符。')
+    .option('lang', '-l <lang:string> 语言标识符。')
     .action(({ options }, message) =>
       h('markdown', `\`\`\`${options?.lang || ''}\n${message}\n\`\`\``))
 
