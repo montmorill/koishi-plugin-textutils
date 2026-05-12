@@ -116,6 +116,23 @@ export function apply(ctx: Context) {
         .replaceAll('****', ''))
     })
 
+  ctx.command('sed <regexp:string> <replacement:string> <message:text>', '替换。')
+    .option('global', '-g 全局替换。')
+    .action(({ session, options, source }, regexp, replacement, message) => {
+      if (!regexp)
+        return void session?.send(`${source}: 未提供搜索模式。`)
+      if (!replacement)
+        return void session?.send(`${source}: 未提供替换字符串。`)
+      const regex = new RegExp(regexp, options?.global ? 'gu' : 'u')
+      const lines = message.split('\n')
+      const result = []
+      for (const line of lines) {
+        result.push(line.replace(regex, (...match) =>
+          replacement.replace(/\\(\d)/g, (_, index) => match[index])))
+      }
+      return result.join('\n')
+    })
+
   ctx.command('markdown <message:text>', '渲染为 markdown。')
     .action((_, message) => h('markdown', message))
 
