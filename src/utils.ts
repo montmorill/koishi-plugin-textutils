@@ -1,16 +1,17 @@
 /* eslint-disable style/max-statements-per-line,antfu/if-newline */
-
-import type { Session } from 'koishi'
 import { h } from 'koishi'
 
-export async function stream(session: Session, gen: AsyncGenerator<string>) {
+export async function stream(
+  gen: AsyncGenerator<string>,
+  send: (element: h) => Promise<[string]>,
+) {
   let id; let index = 0; let res = await gen.next()
   for (; !res.done; res = await gen.next(), index++) {
-    try { [id] = await session.send(h('qq:markdown', { stream: { state: 1, id, index } }, res.value)) }
-    catch { [id] = await session.send(h('qq:markdown', { stream: { state: 1, index } }, res.value)) }
+    try { [id] = await send(h('qq:markdown', { stream: { state: 1, id, index } }, res.value)) }
+    catch { [id] = await send(h('qq:markdown', { stream: { state: 1, index } }, res.value)) }
   }
-  try { await session.send(h('qq:markdown', { stream: { state: 10, id, index } }, res.value)) }
-  catch { await session.send(res.value) }
+  try { await send(h('qq:markdown', { stream: { state: 10, id, index } }, res.value)) }
+  catch { await send(res.value) }
 }
 
 export function shortcut(canEnter: boolean | undefined, text: string, show?: string) {
