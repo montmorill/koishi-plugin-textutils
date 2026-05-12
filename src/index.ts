@@ -24,9 +24,9 @@ export function apply(ctx: Context) {
   ctx.command('shuf <...fields:string>', '打乱字段列表。')
     .option('delimiter', '-d <delim:string> 分隔符。')
     .option('count', '-n <count:number> 输出 count 个字段。')
-    .action(({ session, options }, ...fields) => {
+    .action(({ session, options, source }, ...fields) => {
       if (!fields.length)
-        return void session?.send('shuf: 未提供字段列表。')
+        return void session?.send(`${source}: 未提供字段列表。`)
       return Random.pick(fields, options?.count || 1).join(' ')
     })
 
@@ -58,10 +58,10 @@ export function apply(ctx: Context) {
     .example('cut 1: hello season')
     .example('cut :3 hello season')
     .example('cut :-5 montmorillonite')
-    .action(({ session, options }, range = '', ...fields) => {
+    .action(({ session, options, source }, range = '', ...fields) => {
       const delimiter = options?.delimiter || ''
       if (options?.field && options?.delimiter) {
-        return void session?.send('cut: 不能同时传递 -d 与 -f 选项。')
+        return void session?.send(`${source}: 不能同时传递 -d 与 -f 选项。`)
       }
       // Fix ranges that starts with '-'
       const entries = Object.entries(omit(options || {}, ['delimiter', 'field']))
@@ -74,9 +74,9 @@ export function apply(ctx: Context) {
         }
       }
       if (!range)
-        return void session?.send('cut: 未提供索引范围。')
+        return void session?.send(`${source}: 未提供索引范围。`)
       if (!fields.length)
-        return void session?.send('cut: 未提供字段列表。')
+        return void session?.send(`${source}: 未提供字段列表。`)
 
       let [start, end] = range.split(':')
       if (!range.includes(':'))
@@ -88,12 +88,7 @@ export function apply(ctx: Context) {
         : fields.map(field => cutter(field.split(delimiter),
           ).join(delimiter)).join(' ')
       if (!result) {
-        return void session?.send([
-          'cut',
-          options?.field ? '-f' : null,
-          options?.delimiter ? `-d ${JSON.stringify(delimiter)}` : null,
-          `${fields.join(' ')}: 无匹配结果。`,
-        ].filter(Boolean).join(' '))
+        return void session?.send(`${source}: 无内容。`)
       }
       return result
     })
@@ -101,11 +96,11 @@ export function apply(ctx: Context) {
   ctx.command('grep <needle:string> <...fields:string>', '搜索包含模式的字段。')
     .option('markdown', '-m 启用 Markdown 输出。')
     .option('invert', '-i 反转匹配。')
-    .action(({ session, options }, needle, ...fields) => {
+    .action(({ session, options, source }, needle, ...fields) => {
       if (!needle)
-        return void session?.send('grep: 未提供搜索模式。')
+        return void session?.send(`${source}: 未提供搜索模式。`)
       if (!fields.length)
-        return void session?.send('grep: 未提供字段列表。')
+        return void session?.send(`${source}: 未提供字段列表。`)
 
       const regex = new RegExp(needle, 'g')
       const result = fields
@@ -113,7 +108,7 @@ export function apply(ctx: Context) {
         .join(' ')
 
       if (!result)
-        return void session?.send(`grep ${needle} ${fields}: 无匹配结果。`)
+        return void session?.send(`${source}: 无匹配结果。`)
       if (!options?.markdown)
         return result
       return h('markdown', result
