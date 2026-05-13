@@ -1,6 +1,7 @@
 import type { Context } from 'koishi'
 import {} from '@koishijs/plugin-help'
 import { h, omit, Random, Schema } from 'koishi'
+import { shortcut } from './utils'
 
 export * from './utils'
 
@@ -173,4 +174,12 @@ export function apply(ctx: Context) {
       }
       return h('markdown', result.join('\n'))
     })
+
+  ctx.command('shortcut <text:string> [show:string]', '渲染为快捷指令。')
+    .option('reference', '-r 引用。')
+    .option('enter', '-e 回车指令。')
+    .action(({ session, options }, text, show = text) =>
+      h('qq:markdown', session?.isDirect && options?.enter
+        ? shortcut.enter(text)
+        : shortcut.input(text, show, options?.reference)))
 }
