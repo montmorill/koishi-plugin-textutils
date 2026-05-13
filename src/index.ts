@@ -168,6 +168,6 @@ export function apply(ctx: Context) {
           heading = false
         }
       }
-      return h('p', h('markdown', result.join('\n')))
+      return h('markdown', result.join('\n'))
     })
 }
