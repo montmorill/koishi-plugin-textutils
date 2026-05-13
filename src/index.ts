@@ -11,6 +11,9 @@ export interface Config {}
 export const Config: Schema<Config> = Schema.object({})
 
 export function apply(ctx: Context) {
+  ctx.command('chars <message:text>', '全部不重复字符。')
+    .action((_, message) => Array.from(new Set(message)).join(' '))
+
   ctx.command('count <...fields:string>', '计算字段数。')
     .option('unique', '-u 去重计数。')
     .example('count apple card dog apple')
