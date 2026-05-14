@@ -178,8 +178,9 @@ export function apply(ctx: Context) {
   ctx.command('shortcut <text:string> [show:string]', '渲染为快捷指令。')
     .option('reference', '-r 引用。')
     .option('enter', '-e 回车指令。')
-    .action(({ session, options }, text, show = text) =>
-      h('qq:markdown', session?.isDirect && options?.enter
+    .action(({ session, options }, text, show = text) => {
+      return session?.isDirect && options?.enter
         ? shortcut.enter(text)
-        : shortcut.input(text, show, options?.reference)))
+        : shortcut.input(text, show, options?.reference)
+    })
 }
