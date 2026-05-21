@@ -24,7 +24,7 @@ shortcut.enter = (text: string) => `<qqbot-cmd-enter text=${JSON.stringify(encod
 
 shortcut.input = (text: string, show?: string, reference?: boolean) => {
   let sb = `<qqbot-cmd-input text=${JSON.stringify(encodeURIComponent(text))}`
-  if (show) sb += ` show=${JSON.stringify(decodeURIComponent(show))}`
+  if (show) sb += ` show=${JSON.stringify(encodeURIComponent(show))}`
   if (reference) sb += ` reference="${reference}"`
   sb += ` />`
   return sb
