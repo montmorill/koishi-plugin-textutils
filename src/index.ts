@@ -1,9 +1,6 @@
 import type { Context } from 'koishi'
 import {} from '@koishijs/plugin-help'
 import { h, omit, Random, Schema } from 'koishi'
-import { shortcut } from './utils'
-
-export * from './utils'
 
 export const name = 'montmorill'
 
@@ -12,11 +9,11 @@ export interface Config {}
 export const Config: Schema<Config> = Schema.object({})
 
 export function apply(ctx: Context) {
-  ctx.command('chars <message:text>', '全部不重复字符。')
+  ctx.command('chars <message:text>', '全部不重复字符')
     .action((_, message) => Array.from(new Set(message)).join(' '))
 
-  ctx.command('count <...fields:string>', '计算字段数。')
-    .option('unique', '-u 去重计数。')
+  ctx.command('count <...fields:string>', '计算字段数')
+    .option('unique', '-u 去重计数')
     .example('count apple card dog apple')
     .example('count -u apple card dog apple')
     .action(({ options }, ...fields) => {
@@ -25,9 +22,9 @@ export function apply(ctx: Context) {
       return String(fields.length)
     })
 
-  ctx.command('shuf <...fields:string>', '打乱字段列表。')
-    .option('delimiter', '-d <delim:string> 分隔符。')
-    .option('count', '-n <count:number> 输出 count 个字段。')
+  ctx.command('shuf <...fields:string>', '打乱字段列表')
+    .option('delimiter', '-d <delim:string> 分隔符')
+    .option('count', '-n <count:number> 输出 count 个字段')
     .action(({ session, options, source }, ...fields) => {
       if (!fields.length)
         return void session?.send(`${source}: 未提供字段列表。`)
@@ -51,9 +48,9 @@ export function apply(ctx: Context) {
     }
   }
 
-  ctx.command('cut <range:string> <...fields:string>', '按范围裁剪字段。')
-    .option('field', '-f 按字段而不是字符切割。')
-    .option('delimiter', '-d <delim:string> 分隔符。')
+  ctx.command('cut <range:string> <...fields:string>', '按范围裁剪字段')
+    .option('field', '-f 按字段而不是字符切割')
+    .option('delimiter', '-d <delim:string> 分隔符')
     .usage(`- cut [-f] <index> <fields...>\n- cut [-f] [start]:[end] <fields...>`)
     .example('cut 1 apple card dog apple')
     .example('cut -1 apple card dog apple')
@@ -97,9 +94,9 @@ export function apply(ctx: Context) {
       return result
     })
 
-  ctx.command('grep <needle:string> <...fields:string>', '搜索包含模式的字段。')
-    .option('markdown', '-m 启用 Markdown 输出。')
-    .option('invert', '-i 反转匹配。')
+  ctx.command('grep <needle:string> <...fields:string>', '搜索包含模式的字段')
+    .option('markdown', '-m 启用 Markdown 输出')
+    .option('invert', '-i 反转匹配')
     .action(({ session, options, source }, needle, ...fields) => {
       if (!needle)
         return void session?.send(`${source}: 未提供搜索模式。`)
@@ -120,8 +117,8 @@ export function apply(ctx: Context) {
         .replaceAll('****', ''))
     })
 
-  ctx.command('sed <regexp:string> <replacement:string> <message:text>', '替换。')
-    .option('global', '-g 全局替换。')
+  ctx.command('sed <regexp:string> <replacement:string> <message:text>', '替换')
+    .option('global', '-g 全局替换')
     .action(({ session, options, source }, regexp, replacement, message) => {
       if (!regexp)
         return void session?.send(`${source}: 未提供搜索模式。`)
@@ -137,20 +134,20 @@ export function apply(ctx: Context) {
       return result.join('\n')
     })
 
-  ctx.command('markdown <message:text>', '渲染为 markdown。')
+  ctx.command('markdown <message:text>', '渲染为 markdown')
     .action((_, message) => h('markdown', message))
 
-  ctx.command('tex <message:text>', '渲染为 TeX。')
+  ctx.command('tex <message:text>', '渲染为 TeX')
     .action((_, message) => h('markdown', `$$\n${message}\n$$`))
 
-  ctx.command('code <message:text>', '渲染为代码块。')
-    .option('lang', '-l <lang:string> 语言标识符。')
+  ctx.command('code <message:text>', '渲染为代码块')
+    .option('lang', '-l <lang:string> 语言标识符')
     .action(({ options }, message) =>
       h('markdown', `\`\`\`${options?.lang || ''}\n${message}\n\`\`\``))
 
-  ctx.command('table <message:text>', '渲染为表格。')
-    .option('no-header', '-H 无表头。')
-    .option('transpose', '-t 转置。')
+  ctx.command('table <message:text>', '渲染为表格')
+    .option('no-header', '-H 无表头')
+    .option('transpose', '-t 转置')
     .action(({ options }, message) => {
       const result = []
       let heading = true
@@ -173,14 +170,5 @@ export function apply(ctx: Context) {
         }
       }
       return h('markdown', result.join('\n'))
-    })
-
-  ctx.command('shortcut <text:string> [show:string]', '渲染为快捷指令。')
-    .option('reference', '-r 引用。')
-    .option('enter', '-e 回车指令。')
-    .action(({ session, options }, text, show = text) => {
-      return session?.isDirect && options?.enter
-        ? shortcut.enter(text)
-        : shortcut.input(text, show, options?.reference)
     })
 }
