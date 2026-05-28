@@ -117,7 +117,7 @@ export function apply(ctx: Context) {
         .replaceAll('****', ''))
     })
 
-  ctx.command('sed <regexp:string> <replacement:string> <message:text>', '替换')
+  ctx.command('sed <regexp:string> <replacement:string> <message:text>', '正则模式替换')
     .option('global', '-g 全局替换')
     .action(({ session, options, source }, regexp, replacement, message) => {
       if (!regexp)
