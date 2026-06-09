@@ -104,17 +104,18 @@ export function apply(ctx: Context) {
         return void session?.send(`${source}: 未提供字段列表。`)
 
       const regex = new RegExp(needle, 'g')
-      const result = fields
-        .filter(field => !!options?.invert !== !!field.match(regex))
-        .join(' ')
+      fields = fields.filter(field => !!options?.invert !== !!field.match(regex))
+      if (options?.markdown) {
+        fields = fields.map(field => field
+          .replaceAll(regex, match => `**${match}**`)
+          .replaceAll('****', ''))
+      }
 
-      if (!result)
+      if (!fields.length)
         return void session?.send(`${source}: 无匹配结果。`)
       if (!options?.markdown)
-        return result
-      return h('markdown', result
-        .replaceAll(regex, match => `**${match}**`)
-        .replaceAll('****', ''))
+        return fields.join(' ')
+      return h('markdown', fields.join('&nbsp;'))
     })
 
   ctx.command('sed <regexp:string> <replacement:string> <message:text>', '正则模式替换')
