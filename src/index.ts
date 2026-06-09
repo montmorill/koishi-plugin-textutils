@@ -115,7 +115,7 @@ export function apply(ctx: Context) {
         return void session?.send(`${source}: 无匹配结果。`)
       if (!options?.markdown)
         return fields.join(' ')
-      return h('markdown', fields.join('&nbsp;'))
+      return h('markdown', fields.join(' '))
     })
 
   ctx.command('sed <regexp:string> <replacement:string> <message:text>', '正则模式替换')
