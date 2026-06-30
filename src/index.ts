@@ -86,8 +86,7 @@ export function apply(ctx: Context) {
 
       const result = options?.field
         ? cutter(fields).join(' ')
-        : fields.map(field => cutter(field.split(delimiter),
-          ).join(delimiter)).join(' ')
+        : fields.map(field => cutter(field.split(delimiter)).join(delimiter)).join(' ')
       if (!result) {
         return void session?.send(`${source}: 无内容。`)
       }
@@ -147,29 +146,25 @@ export function apply(ctx: Context) {
       h('markdown', `\`\`\`${options?.lang || ''}\n${message}\n\`\`\``))
 
   ctx.command('table <message:text>', '渲染为表格')
-    .option('no-header', '-H 无表头')
-    .option('transpose', '-t 转置')
+    .option('void', '-v 虚拟表头')
+    .option('transpose', '-T 转置')
     .action(({ options }, message) => {
-      const result = []
-      let heading = true
-      let rows = message.split('\n')
-        .filter(line => line.trim())
-        .map(line => line.split(' '))
-      if (options?.transpose)
-        rows = rows[0].map((_, index) => rows.map(row => row[index]))
-      if (options?.['no-header'])
-        rows.unshift([])
-      const maxCols = Math.max(...rows.map(row => row.length))
-      for (const row of rows) {
-        result.push(`|${Array.from(
-          { length: maxCols },
-          (_, idx) => row[idx]?.replaceAll('|', '\\|') ?? '',
-        ).join('|')}|`)
-        if (heading) {
-          result.push(`${'|-'.repeat(maxCols)}|`)
-          heading = false
-        }
+      let cells = message.split('\n').map(line => line.split(' '))
+      const maxLength = Math.max(...cells.map(row => row.length))
+      const columnCount = options?.transpose ? cells.length : maxLength
+      if (options?.transpose) {
+        cells = Array.from({ length: maxLength }, (_, index) =>
+          cells.map(row => row[index]))
       }
-      return h('markdown', result.join('\n'))
+
+      if (options?.void)
+        cells.unshift([])
+
+      const lines = cells.map(row =>
+        `|${Array.from({ length: columnCount }, (_, index) =>
+          row[index]?.replaceAll('|', '\\|') ?? '').join('|')}|`)
+      lines.splice(1, 0, `${'|-'.repeat(columnCount)}|`)
+
+      return h('markdown', lines.join('\n'))
     })
 }
