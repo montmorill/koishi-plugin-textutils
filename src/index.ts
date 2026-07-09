@@ -1,6 +1,6 @@
 import type { Context } from 'koishi'
 import {} from '@koishijs/plugin-help'
-import { h, omit, Random, Schema } from 'koishi'
+import { h, Random, Schema } from 'koishi'
 import enUS from '../locales/en-US.yml'
 import zhCN from '../locales/zh-CN.yml'
 
@@ -65,68 +65,6 @@ export function apply(ctx: Context) {
       return options?.count
         ? groups.map(([count, line]) => `${count} ${line}`).join('\n')
         : groups.map(([_, line]) => line).join('\n')
-    }))
-
-  function cut(start: number, end: number) {
-    if (start === end) {
-      return <T>(sequence: T[]) => [sequence[
-        start < 0 ? sequence.length + start : start - 1
-      ]]
-    }
-    end -= 1
-    return <T>(sequence: T[]) => {
-      const s = start < 0 ? sequence.length + start + 1 : start
-      const e = end < 0 ? sequence.length + end : end
-      if (s <= e)
-        return sequence.slice(s, e + 1)
-      return sequence.reverse()
-        .slice(sequence.length - s, sequence.length - e + 1)
-    }
-  }
-
-  ctx.command('cut <range:string> <lines...:string>', '按范围裁剪字段')
-    .option('field', '-f 按字段而不是字符切割')
-    .option('delimiter', '-d <delim:string> 分隔符')
-    .usage(`- cut [-f] <index> <lines...>\n- cut [-f] [start]:[end] <lines...>`)
-    .example('cut 1 apple card dog apple')
-    .example('cut -1 apple card dog apple')
-    .example('cut -f 2 apple card dog apple')
-    .example('cut 5:1 abcdefg')
-    .example('cut 1: hello season')
-    .example('cut :3 hello season')
-    .example('cut :-5 montmorillonite')
-    .action(plain(({ session, options, source }, range = '', ...lines) => {
-      const delimiter = options?.delimiter || ''
-      if (options?.field && options?.delimiter) {
-        return void session?.send(`${source}: 不能同时传递 -d 与 -f 选项。`)
-      }
-      // Fix ranges that starts with '-'
-      const entries = Object.entries(omit(options || {}, ['delimiter', 'field']))
-      if (entries.length) {
-        lines.unshift(range)
-        range = '-'
-        for (const [key, value] of entries) {
-          range += key
-          lines.unshift(value as string)
-        }
-      }
-      if (!range)
-        return void session?.send(`${source}: 未提供索引范围。`)
-      if (!lines.length)
-        return void session?.send(`${source}: 未提供字段列表。`)
-
-      let [start, end] = range.split(':')
-      if (!range.includes(':'))
-        end = start
-      const cutter = cut(Number(start), Number(end))
-
-      const result = options?.field
-        ? cutter(lines).join(' ')
-        : lines.map(field => cutter(field.split(delimiter)).join(delimiter)).join(' ')
-      if (!result) {
-        return void session?.send(`${source}: 无内容。`)
-      }
-      return result
     }))
 
   ctx.command('grep <needle:string> <lines...:string>', '搜索包含模式的字段')
