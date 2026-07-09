@@ -1,13 +1,21 @@
 {
   "name": "koishi-plugin-textutils",
-  "version": "0.0.1",
-  "description": "",
+  "version": "1.0.0",
+  "description": "为 Koishi 提供文字处理指令",
   "typings": "lib/index.d.ts",
   "license": "MIT",
   "keywords": [
     "chatbot",
     "koishi",
-    "plugin"
+    "plugin",
+    "text",
+    "utils",
+    "shuf",
+    "wc",
+    "uniq",
+    "sort",
+    "grep",
+    "sed"
   ],
   "main": "lib/index.js",
   "files": [
