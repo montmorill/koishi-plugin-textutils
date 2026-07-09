@@ -67,6 +67,15 @@ export function apply(ctx: Context) {
         : groups.map(([_, line]) => line).join('\n')
     }))
 
+  ctx.command('sort <lines...:string>')
+    .option('reverse', '-r')
+    .action(plain(({ options }, ...lines) => {
+      lines.sort((a, b) => a.localeCompare(b))
+      if (options?.reverse)
+        lines.reverse()
+      return lines.join('\n')
+    }))
+
   ctx.command('grep <needle:string> <lines...:string>', '搜索包含模式的字段')
     .option('markdown', '-m 启用 Markdown 输出')
     .option('invert', '-i 反转匹配')
@@ -80,8 +89,7 @@ export function apply(ctx: Context) {
       lines = lines.filter(field => !!options?.invert !== !!field.match(regex))
       if (options?.markdown) {
         lines = lines.map(field => field
-          .replaceAll(regex, match => `**${match}**`)
-          .replaceAll('****', ''))
+          .replaceAll(regex, match => `**${match}**`))
       }
 
       if (!lines.length)
@@ -96,7 +104,7 @@ export function apply(ctx: Context) {
     .action(plain(({ session, options, source }, regexp, replacement, message) => {
       if (!regexp)
         return void session?.send(`${source}: 未提供搜索模式。`)
-      if (!replacement)
+      if (!replacement && replacement !== '')
         return void session?.send(`${source}: 未提供替换字符串。`)
       const regex = new RegExp(regexp, options?.global ? 'gu' : 'u')
       const lines = message.split('\n')

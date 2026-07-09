@@ -1,24 +1,22 @@
 commands:
   shuf:
-    description: |
-      生成随机排列
-      把输入行按随机顺序输出。
+    description: 生成随机排列
     options:
       count: 最多输出指定的行数
   wc:
-    description: |
-      输出的行数、单词数、字节数
-      输出行、单词和字节统计数。单词指以空白字符分隔的长度非零的可打印字符序列。
+    description: 输出行数、单词数、字节数
     options:
       bytes: 输出字节统计数
       chars: 输出字符统计数
       lines: 输出换行符统计数
       words: 输出单词统计数
   uniq:
-    description: |
-      报告或省略重复行
-      筛选一组相邻的匹配行输出。
+    description: 输出或省略重复行
     options:
       repeated: 仅显示重复行，每组一个
       unique: 只显示不重复的行
       count: 每行前附上重复出现的次数作为前缀
+  sort:
+    description: 对行排序
+    options:
+      reverse: 反转排序的结果
