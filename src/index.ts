@@ -2,17 +2,17 @@ import type { Context } from 'koishi'
 import {} from '@koishijs/plugin-help'
 import { h, omit, Random, Schema } from 'koishi'
 
-export const name = 'montmorill'
+export const name = 'textutils'
 
 export interface Config {}
 
 export const Config: Schema<Config> = Schema.object({})
 
 export function apply(ctx: Context) {
-  ctx.command('chars <message:text>', '全部不重复字符')
+  ctx.command('uniq <message:text>', '全部不重复字符')
     .action((_, message) => Array.from(new Set(message)).join(' '))
 
-  ctx.command('count <...fields:string>', '计算字段数')
+  ctx.command('count <fields...:string>', '计算字段数')
     .option('unique', '-u 去重计数')
     .example('count apple card dog apple')
     .example('count -u apple card dog apple')
@@ -22,7 +22,7 @@ export function apply(ctx: Context) {
       return String(fields.length)
     })
 
-  ctx.command('shuf <...fields:string>', '打乱字段列表')
+  ctx.command('shuf <fields...:string>', '打乱字段列表')
     .option('delimiter', '-d <delim:string> 分隔符')
     .option('count', '-n <count:number> 输出 count 个字段')
     .action(({ session, options, source }, ...fields) => {
@@ -48,7 +48,7 @@ export function apply(ctx: Context) {
     }
   }
 
-  ctx.command('cut <range:string> <...fields:string>', '按范围裁剪字段')
+  ctx.command('cut <range:string> <fields...:string>', '按范围裁剪字段')
     .option('field', '-f 按字段而不是字符切割')
     .option('delimiter', '-d <delim:string> 分隔符')
     .usage(`- cut [-f] <index> <fields...>\n- cut [-f] [start]:[end] <fields...>`)
@@ -93,7 +93,7 @@ export function apply(ctx: Context) {
       return result
     })
 
-  ctx.command('grep <needle:string> <...fields:string>', '搜索包含模式的字段')
+  ctx.command('grep <needle:string> <fields...:string>', '搜索包含模式的字段')
     .option('markdown', '-m 启用 Markdown 输出')
     .option('invert', '-i 反转匹配')
     .action(({ session, options, source }, needle, ...fields) => {

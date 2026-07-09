@@ -1,5 +1,5 @@
 {
-  "name": "koishi-plugin-montmorill",
+  "name": "koishi-plugin-textutils",
   "version": "0.0.1",
   "description": "",
   "typings": "lib/index.d.ts",
