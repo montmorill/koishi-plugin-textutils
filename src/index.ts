@@ -1,6 +1,8 @@
 import type { Context } from 'koishi'
 import {} from '@koishijs/plugin-help'
 import { h, omit, Random, Schema } from 'koishi'
+import enUS from '../locales/en-US.yml'
+import zhCN from '../locales/zh-CN.yml'
 
 export const name = 'textutils'
 
@@ -8,28 +10,62 @@ export interface Config {}
 
 export const Config: Schema<Config> = Schema.object({})
 
+function plain<A extends any[]>(func: (...args: A) => any) {
+  return (...args: A) => h.text(func(...args))
+}
+
 export function apply(ctx: Context) {
-  ctx.command('uniq <message:text>', '全部不重复字符')
-    .action((_, message) => Array.from(new Set(message)).join(' '))
+  ctx.i18n.define('en-US', enUS)
+  ctx.i18n.define('zh-CN', zhCN)
 
-  ctx.command('count <fields...:string>', '计算字段数')
-    .option('unique', '-u 去重计数')
-    .example('count apple card dog apple')
-    .example('count -u apple card dog apple')
-    .action(({ options }, ...fields) => {
+  ctx.command('shuf <lines...:string>')
+    .option('count', '-n <count:posint>')
+    .action(plain(({ options }, ...lines) => {
+      return Random.pick(lines, options?.count || 1).join(' ')
+    }))
+
+  ctx.command('wc <text:text>')
+    .option('bytes', '-c')
+    .option('chars', '-m')
+    .option('lines', '-l')
+    .option('words', '-w')
+    .action(plain(({ options }, text) => {
+      if (options?.bytes)
+        return text.length
+      if (options?.chars)
+        return text.split('').length
+      if (options?.lines)
+        return text.split('\n').length
+      return text.split(/\s+/g).length
+    }))
+
+  ctx.command('uniq <lines...:string>')
+    .option('repeated', '-d')
+    .option('unique', '-u')
+    .option('count', '-c')
+    .action(plain(({ options }, lines) => {
+      let groups: [number, string][] = []
+      let count = 1
+      let last = lines[0]
+      for (let i = 1; i < lines.length; i++) {
+        if (lines[i] !== last) {
+          groups.push([count, last])
+          last = lines[i]
+          count = 0
+        }
+        count++
+      }
+      groups.push([count, last])
+
+      if (options?.repeated)
+        groups = groups.filter(([count]) => count > 1)
       if (options?.unique)
-        return String(new Set(fields).size)
-      return String(fields.length)
-    })
+        groups = groups.filter(([count]) => count === 1)
 
-  ctx.command('shuf <fields...:string>', '打乱字段列表')
-    .option('delimiter', '-d <delim:string> 分隔符')
-    .option('count', '-n <count:number> 输出 count 个字段')
-    .action(({ session, options, source }, ...fields) => {
-      if (!fields.length)
-        return void session?.send(`${source}: 未提供字段列表。`)
-      return Random.pick(fields, options?.count || 1).join(' ')
-    })
+      return options?.count
+        ? groups.map(([count, line]) => `${count} ${line}`).join('\n')
+        : groups.map(([_, line]) => line).join('\n')
+    }))
 
   function cut(start: number, end: number) {
     if (start === end) {
@@ -48,10 +84,10 @@ export function apply(ctx: Context) {
     }
   }
 
-  ctx.command('cut <range:string> <fields...:string>', '按范围裁剪字段')
+  ctx.command('cut <range:string> <lines...:string>', '按范围裁剪字段')
     .option('field', '-f 按字段而不是字符切割')
     .option('delimiter', '-d <delim:string> 分隔符')
-    .usage(`- cut [-f] <index> <fields...>\n- cut [-f] [start]:[end] <fields...>`)
+    .usage(`- cut [-f] <index> <lines...>\n- cut [-f] [start]:[end] <lines...>`)
     .example('cut 1 apple card dog apple')
     .example('cut -1 apple card dog apple')
     .example('cut -f 2 apple card dog apple')
@@ -59,7 +95,7 @@ export function apply(ctx: Context) {
     .example('cut 1: hello season')
     .example('cut :3 hello season')
     .example('cut :-5 montmorillonite')
-    .action(({ session, options, source }, range = '', ...fields) => {
+    .action(plain(({ session, options, source }, range = '', ...lines) => {
       const delimiter = options?.delimiter || ''
       if (options?.field && options?.delimiter) {
         return void session?.send(`${source}: 不能同时传递 -d 与 -f 选项。`)
@@ -67,16 +103,16 @@ export function apply(ctx: Context) {
       // Fix ranges that starts with '-'
       const entries = Object.entries(omit(options || {}, ['delimiter', 'field']))
       if (entries.length) {
-        fields.unshift(range)
+        lines.unshift(range)
         range = '-'
         for (const [key, value] of entries) {
           range += key
-          fields.unshift(value as string)
+          lines.unshift(value as string)
         }
       }
       if (!range)
         return void session?.send(`${source}: 未提供索引范围。`)
-      if (!fields.length)
+      if (!lines.length)
         return void session?.send(`${source}: 未提供字段列表。`)
 
       let [start, end] = range.split(':')
@@ -85,41 +121,41 @@ export function apply(ctx: Context) {
       const cutter = cut(Number(start), Number(end))
 
       const result = options?.field
-        ? cutter(fields).join(' ')
-        : fields.map(field => cutter(field.split(delimiter)).join(delimiter)).join(' ')
+        ? cutter(lines).join(' ')
+        : lines.map(field => cutter(field.split(delimiter)).join(delimiter)).join(' ')
       if (!result) {
         return void session?.send(`${source}: 无内容。`)
       }
       return result
-    })
+    }))
 
-  ctx.command('grep <needle:string> <fields...:string>', '搜索包含模式的字段')
+  ctx.command('grep <needle:string> <lines...:string>', '搜索包含模式的字段')
     .option('markdown', '-m 启用 Markdown 输出')
     .option('invert', '-i 反转匹配')
-    .action(({ session, options, source }, needle, ...fields) => {
+    .action(({ session, options, source }, needle, ...lines) => {
       if (!needle)
         return void session?.send(`${source}: 未提供搜索模式。`)
-      if (!fields.length)
+      if (!lines.length)
         return void session?.send(`${source}: 未提供字段列表。`)
 
       const regex = new RegExp(needle, 'g')
-      fields = fields.filter(field => !!options?.invert !== !!field.match(regex))
+      lines = lines.filter(field => !!options?.invert !== !!field.match(regex))
       if (options?.markdown) {
-        fields = fields.map(field => field
+        lines = lines.map(field => field
           .replaceAll(regex, match => `**${match}**`)
           .replaceAll('****', ''))
       }
 
-      if (!fields.length)
+      if (!lines.length)
         return void session?.send(`${source}: 无匹配结果。`)
       if (!options?.markdown)
-        return fields.join(' ')
-      return h('markdown', fields.join(' '))
+        return h.text(lines.join(' '))
+      return h('markdown', lines.join(' '))
     })
 
   ctx.command('sed <regexp:string> <replacement:string> <message:text>', '正则模式替换')
     .option('global', '-g 全局替换')
-    .action(({ session, options, source }, regexp, replacement, message) => {
+    .action(plain(({ session, options, source }, regexp, replacement, message) => {
       if (!regexp)
         return void session?.send(`${source}: 未提供搜索模式。`)
       if (!replacement)
@@ -132,7 +168,7 @@ export function apply(ctx: Context) {
           replacement.replace(/\\(\d)/g, (_, index) => match[index])))
       }
       return result.join('\n')
-    })
+    }))
 
   ctx.command('markdown <message:text>', '渲染为 markdown')
     .action((_, message) => h('markdown', message))

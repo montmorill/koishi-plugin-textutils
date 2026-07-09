@@ -1,0 +1,24 @@
+commands:
+  shuf:
+    description: |
+      generate random permutation
+      Write a random permutation of the input lines.
+    options:
+      count: output at most COUNT lines
+  wc:
+    description: |
+      print newline, word, and byte counts
+      Print newline, word, and byte counts. A word is a non-zero-length sequence of printable characters delimited by white space.
+    options:
+      bytes: print the byte counts
+      chars: print the character counts
+      lines: print the newline counts
+      words: print the word counts
+  uniq:
+    description: |
+      report or omit repeated lines
+      Filter adjacent matching lines from input, writing to output.
+    options:
+      repeated: only print duplicate lines, one for each group
+      unique: only print unique lines
+      count: prefix lines by the number of occurrences
