@@ -20,3 +20,11 @@ commands:
     description: 对行排序
     options:
       reverse: 反转排序的结果
+  grep:
+    description: 打印匹配给定模式的行
+    options:
+      invert: 改变匹配的意义，只选择不匹配的行。
+      color: 在匹配的行周围标记。
+    messages:
+      no-needle: 未提供模式。
+      no-haystack: 未提供文本。

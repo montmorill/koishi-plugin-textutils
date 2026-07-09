@@ -1,4 +1,4 @@
-import type { Context } from 'koishi'
+import type { Awaitable, Context } from 'koishi'
 import {} from '@koishijs/plugin-help'
 import { h, Random, Schema } from 'koishi'
 import enUS from '../locales/en-US.yml'
@@ -10,11 +10,20 @@ export interface Config {}
 
 export const Config: Schema<Config> = Schema.object({})
 
-function plain<A extends any[]>(func: (...args: A) => any) {
-  return (...args: A) => h.text(func(...args))
+function plain<A extends any[]>(func: (...args: A) => Awaitable<any>) {
+  return async (...args: A) => h.text(await func(...args))
 }
 
 export function apply(ctx: Context) {
+  ctx.i18n.define('', {
+    commands: {
+      grep: {
+        messages: {
+          colored: '<strong>{0}</strong>',
+        },
+      },
+    },
+  })
   ctx.i18n.define('en-US', enUS)
   ctx.i18n.define('zh-CN', zhCN)
 
@@ -76,27 +85,41 @@ export function apply(ctx: Context) {
       return lines.join('\n')
     }))
 
-  ctx.command('grep <needle:string> <lines...:string>', '搜索包含模式的字段')
-    .option('markdown', '-m 启用 Markdown 输出')
-    .option('invert', '-i 反转匹配')
-    .action(({ session, options, source }, needle, ...lines) => {
+  ctx.command('grep <needle:string> <lines...:string>')
+    .option('invert', '-v')
+    .option('color', '--color')
+    .action(async ({ session, options }, needle, ...lines) => {
+      if (!session)
+        return
       if (!needle)
-        return void session?.send(`${source}: 未提供搜索模式。`)
+        return void await session.send(await session.i18n('.no-needle'))
       if (!lines.length)
-        return void session?.send(`${source}: 未提供字段列表。`)
+        return void await session.send(await session.i18n('.no-haystack'))
 
-      const regex = new RegExp(needle, 'g')
-      lines = lines.filter(field => !!options?.invert !== !!field.match(regex))
-      if (options?.markdown) {
-        lines = lines.map(field => field
-          .replaceAll(regex, match => `**${match}**`))
+      if (options?.invert || !options?.color) {
+        const regex = new RegExp(needle, 'u')
+        lines = lines.filter(line => !options?.invert === !!line.match(regex))
+        return h.text(lines.join(' '))
       }
 
-      if (!lines.length)
-        return void session?.send(`${source}: 无匹配结果。`)
-      if (!options?.markdown)
-        return h.text(lines.join(' '))
-      return h('markdown', lines.join(' '))
+      const regex = new RegExp(needle, 'gu')
+      const elements = lines.flatMap((line) => {
+        const matches = line.matchAll(regex)
+        const elements = []
+        let current = 0
+        for (const match of matches) {
+          if (match.index > current)
+            elements.push(h.text(line.substring(current, match.index)))
+          elements.push(...session.i18n('.colored', match))
+          current = match.index + match[0].length
+        }
+        if (current < line.length)
+          elements.push(h.text(line.substring(current)))
+        elements.push(' ')
+        return elements
+      })
+      elements.pop()
+      return elements
     })
 
   ctx.command('sed <regexp:string> <replacement:string> <message:text>', '正则模式替换')

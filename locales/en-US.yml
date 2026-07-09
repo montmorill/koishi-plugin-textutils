@@ -20,3 +20,11 @@ commands:
     description: sort lines of text
     options:
       reverse: reverse the result of comparisons
+  grep:
+    description: print lines that match pattern
+    options:
+      invert: Invert the sense of matching, to select non-matching lines.
+      color: Display the matched strings with special color.
+    messages:
+      no-needle: No needle provided.
+      no-haystack: No haystack provided.
