@@ -169,38 +169,4 @@ export function apply(ctx: Context) {
       }
       return result.join('\n')
     }))
-
-  ctx.command('markdown <message:text>', '渲染为 markdown')
-    .action((_, message) => h('markdown', message))
-
-  ctx.command('tex <message:text>', '渲染为 TeX')
-    .action((_, message) => h('markdown', `$$\n${message}\n$$`))
-
-  ctx.command('code <message:text>', '渲染为代码块')
-    .option('lang', '-l <lang:string> 语言标识符')
-    .action(({ options }, message) =>
-      h('markdown', `\`\`\`${options?.lang || ''}\n${message}\n\`\`\``))
-
-  ctx.command('table <message:text>', '渲染为表格')
-    .option('void', '-v 虚拟表头')
-    .option('transpose', '-T 转置')
-    .action(({ options }, message) => {
-      let cells = message.split('\n').map(line => line.split(' '))
-      const maxLength = Math.max(...cells.map(row => row.length))
-      const columnCount = options?.transpose ? cells.length : maxLength
-      if (options?.transpose) {
-        cells = Array.from({ length: maxLength }, (_, index) =>
-          cells.map(row => row[index]))
-      }
-
-      if (options?.void)
-        cells.unshift([])
-
-      const lines = cells.map(row =>
-        `|${Array.from({ length: columnCount }, (_, index) =>
-          row[index]?.replaceAll('|', '\\|') ?? '').join('|')}|`)
-      lines.splice(1, 0, `${'|-'.repeat(columnCount)}|`)
-
-      return h('markdown', lines.join('\n'))
-    })
 }
