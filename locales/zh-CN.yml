@@ -28,3 +28,10 @@ commands:
     messages:
       no-needle: 未提供模式。
       no-haystack: 未提供文本。
+  sed:
+    description: 替换字符串中的子字符串
+    options:
+      global: 全局替换
+    messages:
+      no-regexp: 未提供正则表达式。
+      no-replacement: 未提供替换字符串。

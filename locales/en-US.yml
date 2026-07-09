@@ -28,3 +28,10 @@ commands:
     messages:
       no-needle: No needle provided.
       no-haystack: No haystack provided.
+  sed:
+    description: replace strings in lines of text
+    options:
+      global: Global replace
+    messages:
+      no-regexp: No regexp provided.
+      no-replacement: No replacement provided.

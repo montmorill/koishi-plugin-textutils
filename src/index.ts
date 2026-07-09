@@ -122,13 +122,15 @@ export function apply(ctx: Context) {
       return elements
     })
 
-  ctx.command('sed <regexp:string> <replacement:string> <message:text>', '正则模式替换')
-    .option('global', '-g 全局替换')
-    .action(plain(({ session, options, source }, regexp, replacement, message) => {
+  ctx.command('sed <regexp:string> <replacement:string> <message:text>')
+    .option('global', '-g')
+    .action(plain(async ({ session, options }, regexp, replacement, message) => {
+      if (!session)
+        return
       if (!regexp)
-        return void session?.send(`${source}: 未提供搜索模式。`)
-      if (!replacement && replacement !== '')
-        return void session?.send(`${source}: 未提供替换字符串。`)
+        return void await session.send(await session.i18n('.no-regexp'))
+      if (replacement === undefined)
+        return void await session.send(await session.i18n('.no-replacement'))
       const regex = new RegExp(regexp, options?.global ? 'gu' : 'u')
       const lines = message.split('\n')
       const result = []

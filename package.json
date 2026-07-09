@@ -1,6 +1,6 @@
 {
   "name": "koishi-plugin-textutils",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "为 Koishi 提供文字处理指令",
   "typings": "lib/index.d.ts",
   "license": "MIT",
