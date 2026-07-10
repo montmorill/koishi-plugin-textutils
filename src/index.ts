@@ -15,15 +15,6 @@ function plain<A extends any[]>(func: (...args: A) => Awaitable<any>) {
 }
 
 export function apply(ctx: Context) {
-  ctx.i18n.define('', {
-    commands: {
-      grep: {
-        messages: {
-          colored: '<strong>{0}</strong>',
-        },
-      },
-    },
-  })
   ctx.i18n.define('en-US', enUS)
   ctx.i18n.define('zh-CN', zhCN)
 

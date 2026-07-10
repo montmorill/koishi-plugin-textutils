@@ -26,6 +26,7 @@ commands:
       invert: 改变匹配的意义，只选择不匹配的行。
       color: 在匹配的行周围标记。
     messages:
+      colored: <strong>{0}</strong>
       no-needle: 未提供模式。
       no-haystack: 未提供文本。
   sed:

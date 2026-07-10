@@ -26,6 +26,7 @@ commands:
       invert: Invert the sense of matching, to select non-matching lines.
       color: Display the matched strings with special color.
     messages:
+      colored: <strong>{0}</strong>
       no-needle: No needle provided.
       no-haystack: No haystack provided.
   sed:
